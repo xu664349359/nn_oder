@@ -18,24 +18,77 @@ class MenuManagementScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Menu Management'),
       ),
-      body: GridView.builder(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 0.8,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-        ),
-        itemCount: menuItems.length,
-        itemBuilder: (context, index) {
-          return MenuCard(
-            menuItem: menuItems[index],
-            isChef: true,
-            onTap: () {
-              // Edit logic could go here
-            },
-          );
-        },
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(AppConstants.defaultPadding),
+              child: Card(
+                color: AppColors.warmPink,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Foodie Status',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          Column(
+                            children: [
+                              const Icon(Icons.favorite, color: Colors.red),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${context.watch<DataProvider>().intimacy?.value ?? 0}',
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              const Text('Intimacy'),
+                            ],
+                          ),
+                          const Column(
+                            children: [
+                              Icon(Icons.restaurant, color: Colors.orange),
+                              SizedBox(height: 4),
+                              Text('Hungry', style: TextStyle(fontWeight: FontWeight.bold)),
+                              Text('Mood'),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: AppConstants.defaultPadding),
+            sliver: SliverGrid(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.8,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+              ),
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  return MenuCard(
+                    menuItem: menuItems[index],
+                    isChef: true,
+                    onTap: () {
+                      // Edit logic could go here
+                    },
+                  );
+                },
+                childCount: menuItems.length,
+              ),
+            ),
+          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 80)), // Space for FAB
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddMenuDialog(context),

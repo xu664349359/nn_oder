@@ -8,6 +8,8 @@ class User {
   final UserRole role;
   final String? partnerId;
   final String? invitationCode;
+  final String phoneNumber;
+  final String password;
 
   User({
     required this.id,
@@ -16,6 +18,8 @@ class User {
     required this.role,
     this.partnerId,
     this.invitationCode,
+    required this.phoneNumber,
+    required this.password,
   });
 
   Map<String, dynamic> toJson() {
@@ -26,6 +30,8 @@ class User {
       'role': role.toString(),
       'partnerId': partnerId,
       'invitationCode': invitationCode,
+      'phoneNumber': phoneNumber,
+      'password': password,
     };
   }
 
@@ -37,6 +43,8 @@ class User {
       role: json['role'] == 'UserRole.chef' ? UserRole.chef : UserRole.foodie,
       partnerId: json['partnerId'],
       invitationCode: json['invitationCode'],
+      phoneNumber: json['phoneNumber'] ?? '',
+      password: json['password'] ?? '',
     );
   }
   
@@ -47,6 +55,8 @@ class User {
     UserRole? role,
     String? partnerId,
     String? invitationCode,
+    String? phoneNumber,
+    String? password,
   }) {
     return User(
       id: id ?? this.id,
@@ -55,6 +65,8 @@ class User {
       role: role ?? this.role,
       partnerId: partnerId ?? this.partnerId,
       invitationCode: invitationCode ?? this.invitationCode,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      password: password ?? this.password,
     );
   }
 }

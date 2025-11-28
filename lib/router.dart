@@ -7,6 +7,11 @@ import 'screens/splash/splash_screen.dart';
 import 'screens/auth/auth_screens.dart';
 import 'screens/chef/chef_screens.dart';
 import 'screens/foodie/foodie_screens.dart';
+import 'screens/unbound/unbound_profile_screen.dart';
+import 'screens/unbound/invitation_screen.dart';
+import 'screens/moments/moments_screen.dart';
+import 'screens/settings/settings_screen.dart';
+import 'screens/binding_success/binding_success_screen.dart';
 import 'models/menu_model.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -21,40 +26,42 @@ final router = GoRouter(
     final isRegistering = state.uri.toString() == '/register';
     final isSplash = state.uri.toString() == '/';
 
-    if (isSplash && authProvider.isLoading) {
-      return null; // Stay on splash
-    }
+    // Allow Splash Screen to handle initial navigation
+    if (isSplash) return null;
 
     if (!isLoggedIn && !isLoggingIn && !isRegistering) {
       return '/login';
     }
 
     if (isLoggedIn) {
-      final user = authProvider.currentUser!;
-      
-      // Check for binding
-      if (user.partnerId == null && !state.uri.toString().startsWith('/binding')) {
-        return '/binding';
+      final user = authProvider.currentUser;
+      final isBound = user?.partnerId != null;
+      final isUnboundRoute = state.uri.toString().startsWith('/unbound');
+      final isSettingsRoute = state.uri.toString() == '/settings';
+      final isBindingSuccessRoute = state.uri.toString() == '/binding-success';
+
+      // If not bound, force to unbound profile (unless already there, inviting, settings, or binding success)
+      if (!isBound) {
+        if (!isUnboundRoute && !isSettingsRoute && !isBindingSuccessRoute) return '/unbound/profile';
+        return null;
       }
-      
-      // If bound (or skipping binding logic if we want), go to home
-      if (user.partnerId != null || state.uri.toString().startsWith('/binding')) {
-         if (state.uri.toString() == '/binding' && user.partnerId != null) {
-            // If already bound and trying to go to binding, redirect to home
-            return user.role == UserRole.chef ? '/chef/home' : '/foodie/home';
-         }
-         
-         // If just bound, or navigating normally
-         if (state.uri.toString() == '/binding') return null; // Stay on binding if partnerId is null
-         
-         // Normal role based redirection
-         if (user.role == UserRole.chef) {
-          if (state.uri.toString().startsWith('/chef')) return null;
-          return '/chef/home';
-        } else {
-          if (state.uri.toString().startsWith('/foodie')) return null;
-          return '/foodie/home';
-        }
+
+      // If bound, prevent access to auth/unbound pages (but allow binding-success animation)
+      if (isLoggingIn || isRegistering || isUnboundRoute) {
+        if (user?.role == UserRole.chef) return '/chef/home';
+        return '/foodie/home';
+      }
+
+      // Allow binding success animation even for bound users
+      if (isBindingSuccessRoute) return null;
+
+      // Normal role based redirection for bound users
+      if (user?.role == UserRole.chef) {
+        if (state.uri.toString().startsWith('/chef')) return null;
+        return '/chef/home';
+      } else if (user?.role == UserRole.foodie) {
+        if (state.uri.toString().startsWith('/foodie')) return null;
+        return '/foodie/home';
       }
     }
 
@@ -71,11 +78,15 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/register',
-      builder: (context, state) => const RoleSelectionScreen(), // Using RoleSelection as register start
+      builder: (context, state) => const RoleSelectionScreen(),
     ),
     GoRoute(
-      path: '/binding',
-      builder: (context, state) => const BindingScreen(),
+      path: '/unbound/profile',
+      builder: (context, state) => const UnboundProfileScreen(),
+    ),
+    GoRoute(
+      path: '/unbound/invite',
+      builder: (context, state) => const InvitationScreen(),
     ),
     // Chef Routes
     GoRoute(
@@ -109,6 +120,18 @@ final router = GoRouter(
     GoRoute(
       path: '/foodie/orders',
       builder: (context, state) => const OrderHistoryScreen(),
+    ),
+    GoRoute(
+      path: '/moments',
+      builder: (context, state) => const MomentsScreen(),
+    ),
+    GoRoute(
+      path: '/settings',
+      builder: (context, state) => const SettingsScreen(),
+    ),
+    GoRoute(
+      path: '/binding-success',
+      builder: (context, state) => const BindingSuccessScreen(),
     ),
   ],
 );

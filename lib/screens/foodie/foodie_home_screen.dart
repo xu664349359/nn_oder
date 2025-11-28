@@ -5,6 +5,10 @@ import '../../core/constants.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/data_provider.dart';
 import '../../widgets/menu_card.dart';
+import 'order_history_screen.dart';
+import '../chef/intimacy_management_screen.dart';
+import '../moments/moments_screen.dart';
+import '../profile/profile_screen.dart';
 
 class FoodieHomeScreen extends StatefulWidget {
   const FoodieHomeScreen({super.key});
@@ -14,6 +18,8 @@ class FoodieHomeScreen extends StatefulWidget {
 }
 
 class _FoodieHomeScreenState extends State<FoodieHomeScreen> {
+  int _currentIndex = 0;
+
   @override
   void initState() {
     super.initState();
@@ -21,6 +27,42 @@ class _FoodieHomeScreenState extends State<FoodieHomeScreen> {
       context.read<DataProvider>().loadInitialData();
     });
   }
+
+  @override
+  Widget build(BuildContext context) {
+    final pages = [
+      const _FoodieHomeContent(),   // Home
+      const OrderHistoryScreen(),   // Orders
+      const IntimacyManagementScreen(), // Intimacy
+      const MomentsScreen(),        // Moments
+      const ProfileScreen(),        // Profile
+    ];
+
+    return Scaffold(
+      body: IndexedStack(
+        index: _currentIndex,
+        children: pages,
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) => setState(() => _currentIndex = index),
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: Colors.grey,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Orders'),
+          BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Intimacy'),
+          BottomNavigationBarItem(icon: Icon(Icons.camera), label: 'Moments'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        ],
+      ),
+    );
+  }
+}
+
+class _FoodieHomeContent extends StatelessWidget {
+  const _FoodieHomeContent();
 
   @override
   Widget build(BuildContext context) {
@@ -46,15 +88,6 @@ class _FoodieHomeScreenState extends State<FoodieHomeScreen> {
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              context.read<AuthProvider>().logout();
-              context.go('/login');
-            },
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppConstants.defaultPadding),
@@ -120,18 +153,6 @@ class _FoodieHomeScreenState extends State<FoodieHomeScreen> {
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        onTap: (index) {
-          if (index == 1) context.push('/foodie/menu');
-          if (index == 2) context.push('/foodie/orders');
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.restaurant_menu), label: 'Menu'),
-          BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Orders'),
-        ],
       ),
     );
   }

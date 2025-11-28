@@ -12,23 +12,29 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _nicknameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
-    _nicknameController.dispose();
+    _phoneController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
   Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
-      final success = await context.read<AuthProvider>().login(_nicknameController.text.trim());
+      final success = await context.read<AuthProvider>().login(
+        _phoneController.text.trim(),
+        _passwordController.text,
+      );
       if (success && mounted) {
         // Router redirect will handle navigation
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User not found. Please register.')),
+          const SnackBar(content: Text('Invalid phone or password')),
         );
       }
     }
@@ -58,14 +64,34 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 48),
                 TextFormField(
-                  controller: _nicknameController,
+                  controller: _phoneController,
                   decoration: const InputDecoration(
-                    labelText: 'Nickname',
-                    prefixIcon: Icon(Icons.person),
+                    labelText: 'Phone Number',
+                    prefixIcon: Icon(Icons.phone),
                   ),
+                  keyboardType: TextInputType.phone,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter your nickname';
+                      return 'Please enter your phone number';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _passwordController,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    prefixIcon: const Icon(Icons.lock),
+                    suffixIcon: IconButton(
+                      icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                    ),
+                  ),
+                  obscureText: _obscurePassword,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your password';
                     }
                     return null;
                   },

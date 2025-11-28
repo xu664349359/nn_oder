@@ -6,6 +6,10 @@ import '../../models/order_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/data_provider.dart';
 import '../../widgets/order_card.dart';
+import 'menu_management_screen.dart';
+import 'intimacy_management_screen.dart';
+import '../moments/moments_screen.dart';
+import '../profile/profile_screen.dart';
 
 class ChefHomeScreen extends StatefulWidget {
   const ChefHomeScreen({super.key});
@@ -15,10 +19,11 @@ class ChefHomeScreen extends StatefulWidget {
 }
 
 class _ChefHomeScreenState extends State<ChefHomeScreen> {
+  int _currentIndex = 0;
+
   @override
   void initState() {
     super.initState();
-    // Refresh data when entering
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DataProvider>().fetchOrders();
       context.read<DataProvider>().fetchIntimacy();
@@ -27,46 +32,54 @@ class _ChefHomeScreenState extends State<ChefHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = context.watch<AuthProvider>().currentUser;
+    final pages = [
+      const MenuManagementScreen(), // Home (Menu + Status)
+      const _ChefOrdersPage(),      // Orders
+      const IntimacyManagementScreen(), // Intimacy
+      const MomentsScreen(),        // Moments
+      const ProfileScreen(),        // Profile
+    ];
+
+    return Scaffold(
+      body: IndexedStack(
+        index: _currentIndex,
+        children: pages,
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) => setState(() => _currentIndex = index),
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: Colors.grey,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Orders'),
+          BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Intimacy'),
+          BottomNavigationBarItem(icon: Icon(Icons.camera), label: 'Moments'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        ],
+      ),
+    );
+  }
+}
+
+class _ChefOrdersPage extends StatelessWidget {
+  const _ChefOrdersPage();
+
+  @override
+  Widget build(BuildContext context) {
     final dataProvider = context.watch<DataProvider>();
     final orders = dataProvider.orders;
-    final intimacy = dataProvider.intimacy;
-
-    // Filter orders (in real app, backend filters)
-    // Here we show all orders for simplicity or filter by chefId if we had it in local user
-    // But mock service returns all orders.
     
     final pendingOrders = orders.where((o) => o.status == OrderStatus.pending).toList();
     final cookingOrders = orders.where((o) => o.status == OrderStatus.cooking).toList();
     final completedOrders = orders.where((o) => o.status == OrderStatus.completed).toList();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          children: [
-            const Text('Chef Dashboard'),
-            Text(
-              'Intimacy: ${intimacy?.value ?? 0} ❤️',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.accent,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              context.read<AuthProvider>().logout();
-              context.go('/login');
-            },
-          ),
-        ],
-      ),
-      body: DefaultTabController(
-        length: 3,
-        child: Column(
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Orders')),
+        body: Column(
           children: [
             Container(
               color: AppColors.surface,
@@ -92,18 +105,6 @@ class _ChefHomeScreenState extends State<ChefHomeScreen> {
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        onTap: (index) {
-          if (index == 1) context.push('/chef/menu');
-          if (index == 2) context.push('/chef/intimacy');
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Orders'),
-          BottomNavigationBarItem(icon: Icon(Icons.restaurant_menu), label: 'Menu'),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Intimacy'),
-        ],
       ),
     );
   }

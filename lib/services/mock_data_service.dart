@@ -21,22 +21,28 @@ class MockDataService {
   Future<void> _delay() async => await Future.delayed(const Duration(milliseconds: 500));
 
   // --- Auth & User ---
-  Future<User> register(String nickname, UserRole role) async {
+  Future<User> register(String phoneNumber, String password, String nickname, UserRole role) async {
     await _delay();
+    // Check if phone already exists
+    if (_users.any((u) => u.phoneNumber == phoneNumber)) {
+      throw Exception('Phone number already registered');
+    }
     final user = User(
       id: _uuid.v4(),
       nickname: nickname,
       role: role,
       invitationCode: role == UserRole.chef ? _generateInvitationCode() : null,
+      phoneNumber: phoneNumber,
+      password: password,
     );
     _users.add(user);
     return user;
   }
 
-  Future<User?> login(String nickname) async {
+  Future<User?> login(String phoneNumber, String password) async {
     await _delay();
     try {
-      return _users.firstWhere((u) => u.nickname == nickname);
+      return _users.firstWhere((u) => u.phoneNumber == phoneNumber && u.password == password);
     } catch (e) {
       return null;
     }

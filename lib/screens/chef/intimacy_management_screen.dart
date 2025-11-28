@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../core/constants.dart';
 import '../../providers/data_provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../models/user_model.dart';
 
 class IntimacyManagementScreen extends StatefulWidget {
   const IntimacyManagementScreen({super.key});
@@ -84,30 +86,31 @@ class _IntimacyManagementScreenState extends State<IntimacyManagementScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: () => _updateIntimacy(10),
-                      icon: const Icon(Icons.add),
-                      label: const Text('Add 10'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: AppColors.primary,
+                if (context.read<AuthProvider>().currentUser?.role == UserRole.chef)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: () => _updateIntimacy(10),
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add 10'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: AppColors.primary,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    ElevatedButton.icon(
-                      onPressed: () => _updateIntimacy(-5),
-                      icon: const Icon(Icons.remove),
-                      label: const Text('Reduce 5'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: AppColors.error,
+                      const SizedBox(width: 16),
+                      ElevatedButton.icon(
+                        onPressed: () => _updateIntimacy(-5),
+                        icon: const Icon(Icons.remove),
+                        label: const Text('Reduce 5'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: AppColors.error,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
               ],
             ),
           ),

@@ -1,6 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/constants.dart';
 import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
@@ -13,36 +14,58 @@ class RoleSelectionScreen extends StatefulWidget {
 }
 
 class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
+  final _phoneController = TextEditingController();
+  final _passwordController = TextEditingController();
   final _nicknameController = TextEditingController();
   UserRole? _selectedRole;
   final _formKey = GlobalKey<FormState>();
+  bool _obscurePassword = true;
+  String? _customAvatarPath;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void dispose() {
+    _phoneController.dispose();
+    _passwordController.dispose();
     _nicknameController.dispose();
     super.dispose();
   }
 
+  String _getDefaultAvatar() {
+    if (_selectedRole == UserRole.chef) {
+      return '👨‍🍳'; // Chef emoji
+    } else if (_selectedRole == UserRole.foodie) {
+      return '🐛'; // Bug/worm emoji
+    }
+    return '👤'; // Default user
+  }
+
+  Future<void> _pickAvatar() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        _customAvatarPath = image.path;
+      });
+    }
+  }
+
   Future<void> _register() async {
     if (_formKey.currentState!.validate() && _selectedRole != null) {
-      await context.read<AuthProvider>().register(
-        _nicknameController.text.trim(),
-        _selectedRole!,
-      );
-      if (mounted) {
-        // Router redirect will handle navigation
-        // But we might want to go to binding screen if no partner
-        // The router redirect logic checks for partner? No, it checks for role.
-        // We should add logic to go to binding if partnerId is null.
-        // For now, let's just let the router handle it.
-        // Wait, the router logic I wrote:
-        // if (isLoggedIn) { if (role == chef) ... else ... }
-        // It doesn't check for binding.
-        // I should update router to check for binding if I want to force it.
-        // The user requirement says "Binding completed then enter home page".
-        // So I should add a check in router or manually navigate to binding.
-        // Let's manually navigate to binding after register for now, or update router.
-        // Updating router is better for persistence.
+      try {
+        await context.read<AuthProvider>().register(
+          _phoneController.text.trim(),
+          _passwordController.text,
+          _nicknameController.text.trim(),
+          _selectedRole!,
+        );
+        // TODO: Save avatar path if needed
+        // Router will handle redirect
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+          );
+        }
       }
     } else if (_selectedRole == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -72,6 +95,59 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
+                
+                // Avatar Section
+                Center(
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.primary, width: 2),
+                        ),
+                        child: _customAvatarPath != null
+                            ? ClipOval(
+                                child: Image.file(
+                                  File(_customAvatarPath!),
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : Center(
+                                child: Text(
+                                  _getDefaultAvatar(),
+                                  style: const TextStyle(fontSize: 50),
+                                ),
+                              ),
+                      ),
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: GestureDetector(
+                          onTap: _pickAvatar,
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: AppColors.accent,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2),
+                            ),
+                            child: const Icon(
+                              Icons.add,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 24),
                 TextFormField(
                   controller: _nicknameController,
                   decoration: const InputDecoration(
@@ -81,6 +157,43 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter a nickname';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _phoneController,
+                  decoration: const InputDecoration(
+                    labelText: 'Phone Number',
+                    prefixIcon: Icon(Icons.phone),
+                  ),
+                  keyboardType: TextInputType.phone,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your phone number';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _passwordController,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    prefixIcon: const Icon(Icons.lock),
+                    suffixIcon: IconButton(
+                      icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                    ),
+                  ),
+                  obscureText: _obscurePassword,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a password';
+                    }
+                    if (value.length < 6) {
+                      return 'Password must be at least 6 characters';
                     }
                     return null;
                   },

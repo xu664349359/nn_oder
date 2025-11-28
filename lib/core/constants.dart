@@ -10,6 +10,16 @@ class AppColors {
   static const Color success = Color(0xFF81C784);
   static const Color error = Color(0xFFE57373);
   
+  static const Color softPurple = Color(0xFFE0D4FC);
+  static const Color warmPink = Color(0xFFFFD6E1);
+  static const Color creamyWhite = Color(0xFFFFF9FA);
+  
+  static const LinearGradient splashGradient = LinearGradient(
+    colors: [Color(0xFFF3E5F5), Color(0xFFFFEBEE), Color(0xFFFFF3E0)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
   static const LinearGradient romanticGradient = LinearGradient(
     colors: [Color(0xFFFF9EB3), Color(0xFFFFD6E1)],
     begin: Alignment.topLeft,

@@ -22,9 +22,9 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> login(String nickname) async {
+  Future<bool> login(String phoneNumber, String password) async {
     _setLoading(true);
-    final user = await _dataService.login(nickname);
+    final user = await _dataService.login(phoneNumber, password);
     if (user != null) {
       await _saveUser(user);
     }
@@ -32,10 +32,16 @@ class AuthProvider extends ChangeNotifier {
     return user != null;
   }
 
-  Future<void> register(String nickname, UserRole role) async {
+  Future<void> register(String phoneNumber, String password, String nickname, UserRole role) async {
     _setLoading(true);
-    final user = await _dataService.register(nickname, role);
-    await _saveUser(user);
+    try {
+      final user = await _dataService.register(phoneNumber, password, nickname, role);
+      await _saveUser(user);
+    } catch (e) {
+      // Phone already registered, rethrow
+      _setLoading(false);
+      rethrow;
+    }
     _setLoading(false);
   }
 
@@ -55,7 +61,7 @@ class AuthProvider extends ChangeNotifier {
       // Ideally MockDataService should return the updated user.
       
       // Re-fetch user from service simulation
-      final updatedUser = await _dataService.login(_currentUser!.nickname);
+      final updatedUser = await _dataService.login(_currentUser!.phoneNumber, _currentUser!.password);
       if (updatedUser != null) {
         await _saveUser(updatedUser);
       }
