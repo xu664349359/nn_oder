@@ -5,6 +5,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants.dart';
 import '../../providers/auth_provider.dart';
 
@@ -28,6 +30,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       vsync: this,
       duration: const Duration(milliseconds: 2000),
     )..repeat(reverse: true);
+    _loadBackgroundImagePath();
   }
 
   @override
@@ -36,12 +39,46 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     super.dispose();
   }
 
+  Future<void> _loadBackgroundImagePath() async {
+    final prefs = await SharedPreferences.getInstance();
+    final path = prefs.getString('profile_bg_path');
+    if (path != null && File(path).existsSync()) {
+      setState(() {
+        _backgroundImagePath = path;
+      });
+    }
+  }
+
+  Future<void> _saveBackgroundImagePath(String path) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('profile_bg_path', path);
+  }
+
   Future<void> _pickBackgroundImage() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
-      setState(() {
-        _backgroundImagePath = image.path;
-      });
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: image.path,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Crop Background',
+            toolbarColor: Colors.deepOrange,
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio: CropAspectRatioPreset.original,
+            lockAspectRatio: false,
+          ),
+          IOSUiSettings(
+            title: 'Crop Background',
+          ),
+        ],
+      );
+
+      if (croppedFile != null) {
+        setState(() {
+          _backgroundImagePath = croppedFile.path;
+        });
+        _saveBackgroundImagePath(croppedFile.path);
+      }
     }
   }
 
@@ -93,9 +130,20 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                       return Positioned.fill(
                         child: Align(
                           alignment: Alignment(0.0, alignmentY),
-                          child: Image.file(
-                            File(_backgroundImagePath!),
-                            fit: BoxFit.fitWidth,
+                          child: ShaderMask(
+                            shaderCallback: (rect) {
+                              return const LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [Colors.transparent, Colors.black, Colors.black, Colors.transparent],
+                                stops: [0.0, 0.15, 0.85, 1.0],
+                              ).createShader(rect);
+                            },
+                            blendMode: BlendMode.dstIn,
+                            child: Image.file(
+                              File(_backgroundImagePath!),
+                              fit: BoxFit.fitWidth,
+                            ),
                           ),
                         ),
                       );
