@@ -24,14 +24,7 @@ class MenuCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
-              child: Image.asset(
-                menuItem.imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  color: Colors.grey[300],
-                  child: const Icon(Icons.restaurant, size: 40, color: Colors.white),
-                ),
-              ),
+              child: _buildImage(),
             ),
             Padding(
               padding: const EdgeInsets.all(12),
@@ -67,5 +60,45 @@ class MenuCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildImage() {
+    // Check if URL is a network URL (starts with http)
+    final isNetworkImage = menuItem.imageUrl.startsWith('http');
+    debugPrint('MenuCard: imageUrl="${menuItem.imageUrl}", isNetwork=$isNetworkImage');
+    
+    if (isNetworkImage) {
+      return Image.network(
+        menuItem.imageUrl,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            color: Colors.grey[200],
+            child: Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                    : null,
+              ),
+            ),
+          );
+        },
+        errorBuilder: (_, __, ___) => Container(
+          color: Colors.grey[300],
+          child: const Icon(Icons.restaurant, size: 40, color: Colors.white),
+        ),
+      );
+    } else {
+      // Fallback to asset image or placeholder
+      return Image.asset(
+        menuItem.imageUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => Container(
+          color: Colors.grey[300],
+          child: const Icon(Icons.restaurant, size: 40, color: Colors.white),
+        ),
+      );
+    }
   }
 }

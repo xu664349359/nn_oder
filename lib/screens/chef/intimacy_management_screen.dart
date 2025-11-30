@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:nn_oder/l10n/generated/app_localizations.dart';
 import '../../core/constants.dart';
 import '../../providers/data_provider.dart';
 import '../../providers/auth_provider.dart';
@@ -26,26 +27,26 @@ class _IntimacyManagementScreenState extends State<IntimacyManagementScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(change > 0 ? 'Add Love' : 'Reduce Love'),
+        title: Text(change > 0 ? AppLocalizations.of(context)!.addLove : AppLocalizations.of(context)!.reduceLove),
         content: TextField(
           controller: _reasonController,
-          decoration: const InputDecoration(hintText: 'Reason (optional)'),
+          decoration: InputDecoration(hintText: AppLocalizations.of(context)!.reasonOptional),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () {
               context.read<DataProvider>().updateIntimacy(
                 change,
-                _reasonController.text.isEmpty ? (change > 0 ? 'Bonus' : 'Penalty') : _reasonController.text,
+                _reasonController.text.isEmpty ? (change > 0 ? AppLocalizations.of(context)!.bonus : AppLocalizations.of(context)!.penalty) : _reasonController.text,
               );
               _reasonController.clear();
               Navigator.pop(context);
             },
-            child: const Text('Confirm'),
+            child: Text(AppLocalizations.of(context)!.confirm),
           ),
         ],
       ),
@@ -58,7 +59,7 @@ class _IntimacyManagementScreenState extends State<IntimacyManagementScreen> {
     final history = intimacy?.history ?? [];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Intimacy Center')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.intimacyCenter)),
       body: Column(
         children: [
           Container(
@@ -72,7 +73,7 @@ class _IntimacyManagementScreenState extends State<IntimacyManagementScreen> {
                 const Icon(Icons.favorite, size: 64, color: Colors.white),
                 const SizedBox(height: 16),
                 Text(
-                  '${intimacy?.value ?? 0}',
+                  '${intimacy?.score ?? 0}',
                   style: Theme.of(context).textTheme.displayLarge?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -80,7 +81,7 @@ class _IntimacyManagementScreenState extends State<IntimacyManagementScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Current Intimacy',
+                  AppLocalizations.of(context)!.currentIntimacy,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: Colors.white.withOpacity(0.9),
                   ),
@@ -93,7 +94,7 @@ class _IntimacyManagementScreenState extends State<IntimacyManagementScreen> {
                       ElevatedButton.icon(
                         onPressed: () => _updateIntimacy(10),
                         icon: const Icon(Icons.add),
-                        label: const Text('Add 10'),
+                        label: Text(AppLocalizations.of(context)!.add10),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: AppColors.primary,
@@ -103,7 +104,7 @@ class _IntimacyManagementScreenState extends State<IntimacyManagementScreen> {
                       ElevatedButton.icon(
                         onPressed: () => _updateIntimacy(-5),
                         icon: const Icon(Icons.remove),
-                        label: const Text('Reduce 5'),
+                        label: Text(AppLocalizations.of(context)!.reduce5),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: AppColors.error,

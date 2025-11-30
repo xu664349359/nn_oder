@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nn_oder/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants.dart';
@@ -8,7 +9,9 @@ import '../../widgets/menu_card.dart';
 import 'order_history_screen.dart';
 import '../chef/intimacy_management_screen.dart';
 import '../moments/moments_screen.dart';
+import '../moments/moments_screen.dart';
 import '../profile/profile_screen.dart';
+import '../../widgets/modern_bottom_navigation.dart';
 
 class FoodieHomeScreen extends StatefulWidget {
   const FoodieHomeScreen({super.key});
@@ -30,6 +33,7 @@ class _FoodieHomeScreenState extends State<FoodieHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final pages = [
       const _FoodieHomeContent(),   // Home
       const OrderHistoryScreen(),   // Orders
@@ -39,22 +43,20 @@ class _FoodieHomeScreenState extends State<FoodieHomeScreen> {
     ];
 
     return Scaffold(
+      extendBody: true,
       body: IndexedStack(
         index: _currentIndex,
         children: pages,
       ),
-      bottomNavigationBar: BottomNavigationBar(
+      bottomNavigationBar: ModernBottomNavigation(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Orders'),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Intimacy'),
-          BottomNavigationBarItem(icon: Icon(Icons.camera), label: 'Moments'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        items: [
+          BottomNavigationBarItem(icon: const Icon(Icons.home), label: l10n.home),
+          BottomNavigationBarItem(icon: const Icon(Icons.receipt_long), label: l10n.orders),
+          BottomNavigationBarItem(icon: const Icon(Icons.favorite), label: l10n.intimacy),
+          BottomNavigationBarItem(icon: const Icon(Icons.camera), label: l10n.moments),
+          BottomNavigationBarItem(icon: const Icon(Icons.person), label: l10n.profile),
         ],
       ),
     );
@@ -70,6 +72,7 @@ class _FoodieHomeContent extends StatelessWidget {
     final dataProvider = context.watch<DataProvider>();
     final menuItems = dataProvider.menuItems;
     final intimacy = dataProvider.intimacy;
+    final l10n = AppLocalizations.of(context)!;
 
     // Simple recommendation logic: just pick the first one or random
     final recommendedItem = menuItems.isNotEmpty ? menuItems.first : null;
@@ -78,9 +81,9 @@ class _FoodieHomeContent extends StatelessWidget {
       appBar: AppBar(
         title: Column(
           children: [
-            Text('Hi, ${user?.nickname ?? 'Foodie'}'),
+            Text('Hi, ${user?.nickname ?? l10n.foodie}'),
             Text(
-              'Intimacy: ${intimacy?.value ?? 0} ❤️',
+              '${l10n.intimacy}: ${intimacy?.score ?? 0} ❤️',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: AppColors.accent,
                 fontWeight: FontWeight.bold,
@@ -89,69 +92,74 @@ class _FoodieHomeContent extends StatelessWidget {
           ],
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Today\'s Special',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.primary,
-              ),
-            ),
-            const SizedBox(height: 16),
-            if (recommendedItem != null)
-              SizedBox(
-                height: 250,
-                child: MenuCard(
-                  menuItem: recommendedItem,
-                  onTap: () => context.push('/foodie/menu/detail', extra: recommendedItem),
-                ),
-              )
-            else
-              const Card(
-                child: Padding(
-                  padding: EdgeInsets.all(32),
-                  child: Center(child: Text('Chef hasn\'t added any dishes yet!')),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await context.read<DataProvider>().fetchMenu();
+        },
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppConstants.defaultPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                l10n.todaysSpecial,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
                 ),
               ),
-            const SizedBox(height: 32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Menu',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+              const SizedBox(height: 16),
+              if (recommendedItem != null)
+                SizedBox(
+                  height: 250,
+                  child: MenuCard(
+                    menuItem: recommendedItem,
+                    onTap: () => context.push('/foodie/menu/detail', extra: recommendedItem),
+                  ),
+                )
+              else
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Center(child: Text(l10n.noDishes)),
                   ),
                 ),
-                TextButton(
-                  onPressed: () => context.push('/foodie/menu'),
-                  child: const Text('See All'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.8,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
+              const SizedBox(height: 32),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    l10n.menu,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => context.push('/foodie/menu'),
+                    child: Text(l10n.seeAll),
+                  ),
+                ],
               ),
-              itemCount: menuItems.length > 4 ? 4 : menuItems.length,
-              itemBuilder: (context, index) {
-                return MenuCard(
-                  menuItem: menuItems[index],
-                  onTap: () => context.push('/foodie/menu/detail', extra: menuItems[index]),
-                );
-              },
-            ),
-          ],
+              const SizedBox(height: 16),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.8,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                ),
+                itemCount: menuItems.length > 4 ? 4 : menuItems.length,
+                itemBuilder: (context, index) {
+                  return MenuCard(
+                    menuItem: menuItems[index],
+                    onTap: () => context.push('/foodie/menu/detail', extra: menuItems[index]),
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

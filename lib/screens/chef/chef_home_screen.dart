@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nn_oder/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants.dart';
@@ -7,9 +8,12 @@ import '../../providers/auth_provider.dart';
 import '../../providers/data_provider.dart';
 import '../../widgets/order_card.dart';
 import 'menu_management_screen.dart';
+import 'recipe_editor_screen.dart';
 import 'intimacy_management_screen.dart';
 import '../moments/moments_screen.dart';
+import '../moments/moments_screen.dart';
 import '../profile/profile_screen.dart';
+import '../../widgets/modern_bottom_navigation.dart';
 
 class ChefHomeScreen extends StatefulWidget {
   const ChefHomeScreen({super.key});
@@ -32,6 +36,7 @@ class _ChefHomeScreenState extends State<ChefHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final pages = [
       const MenuManagementScreen(), // Home (Menu + Status)
       const _ChefOrdersPage(),      // Orders
@@ -41,22 +46,20 @@ class _ChefHomeScreenState extends State<ChefHomeScreen> {
     ];
 
     return Scaffold(
+      extendBody: true,
       body: IndexedStack(
         index: _currentIndex,
         children: pages,
       ),
-      bottomNavigationBar: BottomNavigationBar(
+      bottomNavigationBar: ModernBottomNavigation(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Orders'),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Intimacy'),
-          BottomNavigationBarItem(icon: Icon(Icons.camera), label: 'Moments'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        items: [
+          BottomNavigationBarItem(icon: const Icon(Icons.home), label: l10n.home),
+          BottomNavigationBarItem(icon: const Icon(Icons.receipt_long), label: l10n.orders),
+          BottomNavigationBarItem(icon: const Icon(Icons.favorite), label: l10n.intimacy),
+          BottomNavigationBarItem(icon: const Icon(Icons.camera), label: l10n.moments),
+          BottomNavigationBarItem(icon: const Icon(Icons.person), label: l10n.profile),
         ],
       ),
     );
@@ -70,6 +73,7 @@ class _ChefOrdersPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final dataProvider = context.watch<DataProvider>();
     final orders = dataProvider.orders;
+    final l10n = AppLocalizations.of(context)!;
     
     final pendingOrders = orders.where((o) => o.status == OrderStatus.pending).toList();
     final cookingOrders = orders.where((o) => o.status == OrderStatus.cooking).toList();
@@ -78,19 +82,37 @@ class _ChefOrdersPage extends StatelessWidget {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
-        appBar: AppBar(title: const Text('Orders')),
+        appBar: AppBar(title: Text(l10n.orders)),
         body: Column(
           children: [
             Container(
-              color: AppColors.surface,
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(25),
+              ),
               child: TabBar(
-                labelColor: AppColors.primary,
-                unselectedLabelColor: AppColors.textSecondary,
-                indicatorColor: AppColors.primary,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.grey[600],
+                indicator: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(25),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                indicatorSize: TabBarIndicatorSize.tab,
+                dividerColor: Colors.transparent,
+                labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+                padding: const EdgeInsets.all(4),
                 tabs: [
-                  Tab(text: 'Pending (${pendingOrders.length})'),
-                  Tab(text: 'Cooking (${cookingOrders.length})'),
-                  Tab(text: 'Done (${completedOrders.length})'),
+                  Tab(text: '${l10n.pending} (${pendingOrders.length})'),
+                  Tab(text: '${l10n.cooking} (${cookingOrders.length})'),
+                  Tab(text: '${l10n.done} (${completedOrders.length})'),
                 ],
               ),
             ),
@@ -118,6 +140,7 @@ class _OrderList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (orders.isEmpty) {
       return Center(
         child: Column(
@@ -126,7 +149,7 @@ class _OrderList extends StatelessWidget {
             Icon(Icons.inbox, size: 64, color: Colors.grey[300]),
             const SizedBox(height: 16),
             Text(
-              'No orders here',
+              l10n.noOrders,
               style: TextStyle(color: Colors.grey[500]),
             ),
           ],
@@ -147,6 +170,22 @@ class _OrderList extends StatelessWidget {
                 ? OrderStatus.cooking
                 : OrderStatus.completed;
             context.read<DataProvider>().updateOrderStatus(order.id, nextStatus);
+          },
+          onViewRecipe: () {
+            final menuItems = context.read<DataProvider>().menuItems;
+            try {
+              final menuItem = menuItems.firstWhere((item) => item.id == order.menuItemId);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => RecipeEditorScreen(menuItem: menuItem),
+                ),
+              );
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(l10n.recipeNotFound)),
+              );
+            }
           },
         );
       },

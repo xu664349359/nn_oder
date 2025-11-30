@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:nn_oder/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/constants.dart';
@@ -14,7 +15,7 @@ class RoleSelectionScreen extends StatefulWidget {
 }
 
 class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
-  final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nicknameController = TextEditingController();
   UserRole? _selectedRole;
@@ -25,7 +26,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
 
   @override
   void dispose() {
-    _phoneController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     _nicknameController.dispose();
     super.dispose();
@@ -53,7 +54,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     if (_formKey.currentState!.validate() && _selectedRole != null) {
       try {
         await context.read<AuthProvider>().register(
-          _phoneController.text.trim(),
+          _emailController.text.trim(),
           _passwordController.text,
           _nicknameController.text.trim(),
           _selectedRole!,
@@ -76,164 +77,175 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Create Account')),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppConstants.defaultPadding),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'Who are you?',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
+    final l10n = AppLocalizations.of(context)!;
+    return GestureDetector(
+      onTap: () {
+        // Dismiss keyboard when tapping outside
+        FocusScope.of(context).unfocus();
+      },
+      child: Scaffold(
+        appBar: AppBar(title: Text(l10n.createAccount)),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            physics: const NeverScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(AppConstants.defaultPadding),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    l10n.whoAreYou,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                
-                // Avatar Section
-                Center(
-                  child: Stack(
-                    children: [
-                      Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.primary, width: 2),
+                  const SizedBox(height: 24),
+                  
+                  // Avatar Section
+                  Center(
+                    child: Stack(
+                      children: [
+                        Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: AppColors.primary, width: 2),
+                          ),
+                          child: _customAvatarPath != null
+                              ? ClipOval(
+                                  child: Image.file(
+                                    File(_customAvatarPath!),
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              : Center(
+                                  child: Text(
+                                    _getDefaultAvatar(),
+                                    style: const TextStyle(fontSize: 50),
+                                  ),
+                                ),
                         ),
-                        child: _customAvatarPath != null
-                            ? ClipOval(
-                                child: Image.file(
-                                  File(_customAvatarPath!),
-                                  fit: BoxFit.cover,
-                                ),
-                              )
-                            : Center(
-                                child: Text(
-                                  _getDefaultAvatar(),
-                                  style: const TextStyle(fontSize: 50),
-                                ),
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: GestureDetector(
+                            onTap: _pickAvatar,
+                            child: Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: AppColors.accent,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 2),
                               ),
-                      ),
-                      Positioned(
-                        right: 0,
-                        bottom: 0,
-                        child: GestureDetector(
-                          onTap: _pickAvatar,
-                          child: Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: AppColors.accent,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 2),
-                            ),
-                            child: const Icon(
-                              Icons.add,
-                              color: Colors.white,
-                              size: 20,
+                              child: const Icon(
+                                Icons.add,
+                                color: Colors.white,
+                                size: 20,
+                              ),
                             ),
                           ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 24),
+                  TextFormField(
+                    controller: _nicknameController,
+                    decoration: InputDecoration(
+                      labelText: l10n.nickname,
+                      prefixIcon: const Icon(Icons.person_outline),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return l10n.enterNickname;
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: InputDecoration(
+                      labelText: l10n.email,
+                      prefixIcon: const Icon(Icons.email),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return l10n.enterEmail;
+                      }
+                      if (!value.contains('@')) {
+                        return 'Please enter a valid email'; // TODO: Add to l10n
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _passwordController,
+                    decoration: InputDecoration(
+                      labelText: l10n.password,
+                      prefixIcon: const Icon(Icons.lock),
+                      suffixIcon: IconButton(
+                        icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                      ),
+                    ),
+                    obscureText: _obscurePassword,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return l10n.enterPassword;
+                      }
+                      if (value.length < 6) {
+                        return l10n.passwordLength;
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 32),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _RoleCard(
+                          title: l10n.chef,
+                          subtitle: l10n.chefSubtitle,
+                          icon: Icons.restaurant_menu,
+                          isSelected: _selectedRole == UserRole.chef,
+                          onTap: () => setState(() => _selectedRole = UserRole.chef),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _RoleCard(
+                          title: l10n.foodie,
+                          subtitle: l10n.foodieSubtitle,
+                          icon: Icons.dining,
+                          isSelected: _selectedRole == UserRole.foodie,
+                          onTap: () => setState(() => _selectedRole = UserRole.foodie),
                         ),
                       ),
                     ],
                   ),
-                ),
-                
-                const SizedBox(height: 24),
-                TextFormField(
-                  controller: _nicknameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nickname',
-                    prefixIcon: Icon(Icons.person_outline),
+                  const SizedBox(height: 48),
+                  ElevatedButton(
+                    onPressed: context.watch<AuthProvider>().isLoading ? null : _register,
+                    child: context.watch<AuthProvider>().isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          )
+                        : Text(l10n.startKitchen),
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a nickname';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _phoneController,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone Number',
-                    prefixIcon: Icon(Icons.phone),
-                  ),
-                  keyboardType: TextInputType.phone,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your phone number';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _passwordController,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    prefixIcon: const Icon(Icons.lock),
-                    suffixIcon: IconButton(
-                      icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
-                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                    ),
-                  ),
-                  obscureText: _obscurePassword,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a password';
-                    }
-                    if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 32),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _RoleCard(
-                        title: 'Chef',
-                        subtitle: 'I cook with love',
-                        icon: Icons.restaurant_menu,
-                        isSelected: _selectedRole == UserRole.chef,
-                        onTap: () => setState(() => _selectedRole = UserRole.chef),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _RoleCard(
-                        title: 'Foodie',
-                        subtitle: 'I eat with joy',
-                        icon: Icons.dining,
-                        isSelected: _selectedRole == UserRole.foodie,
-                        onTap: () => setState(() => _selectedRole = UserRole.foodie),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 48),
-                ElevatedButton(
-                  onPressed: context.watch<AuthProvider>().isLoading ? null : _register,
-                  child: context.watch<AuthProvider>().isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                        )
-                      : const Text('Start My Kitchen'),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

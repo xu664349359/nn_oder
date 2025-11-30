@@ -16,12 +16,13 @@ import 'models/menu_model.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
-final router = GoRouter(
-  navigatorKey: _rootNavigatorKey,
-  initialLocation: '/',
-  redirect: (context, state) {
-    final authProvider = context.read<AuthProvider>();
-    final isLoggedIn = authProvider.isAuthenticated;
+GoRouter createRouter(AuthProvider authProvider) {
+  return GoRouter(
+    navigatorKey: _rootNavigatorKey,
+    initialLocation: '/',
+    refreshListenable: authProvider,
+    redirect: (context, state) {
+      final isLoggedIn = authProvider.isAuthenticated;
     final isLoggingIn = state.uri.toString() == '/login';
     final isRegistering = state.uri.toString() == '/register';
     final isSplash = state.uri.toString() == '/';
@@ -57,10 +58,14 @@ final router = GoRouter(
 
       // Normal role based redirection for bound users
       if (user?.role == UserRole.chef) {
-        if (state.uri.toString().startsWith('/chef')) return null;
+        if (state.uri.toString().startsWith('/chef') || 
+            state.uri.toString() == '/settings' || 
+            state.uri.toString() == '/moments') return null;
         return '/chef/home';
       } else if (user?.role == UserRole.foodie) {
-        if (state.uri.toString().startsWith('/foodie')) return null;
+        if (state.uri.toString().startsWith('/foodie') || 
+            state.uri.toString() == '/settings' || 
+            state.uri.toString() == '/moments') return null;
         return '/foodie/home';
       }
     }
@@ -134,4 +139,5 @@ final router = GoRouter(
       builder: (context, state) => const BindingSuccessScreen(),
     ),
   ],
-);
+  );
+}

@@ -51,4 +51,37 @@ class Order {
       reviewComment: reviewComment ?? this.reviewComment,
     );
   }
+
+  factory Order.fromJson(Map<String, dynamic> json) {
+    return Order(
+      id: json['id'] ?? '',
+      foodieId: json['foodie_id'] ?? '',
+      chefId: json['chef_id'] ?? '',
+      menuItemId: json['menu_item_id'] ?? '',
+      menuItemName: json['menu_item_name'] ?? '',
+      menuItemImage: json['menu_item_image'] ?? '',
+      status: OrderStatus.values.firstWhere(
+        (e) => e.name == json['status'],
+        orElse: () => OrderStatus.pending,
+      ),
+      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
+      rating: json['rating'],
+      reviewComment: json['review_comment'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'foodie_id': foodieId,
+      'chef_id': chefId,
+      'menu_item_id': menuItemId,
+      'menu_item_name': menuItemName,
+      'menu_item_image': menuItemImage,
+      'status': status.name,
+      'created_at': createdAt.toIso8601String(),
+      if (rating != null) 'rating': rating,
+      if (reviewComment != null) 'review_comment': reviewComment,
+    };
+  }
 }

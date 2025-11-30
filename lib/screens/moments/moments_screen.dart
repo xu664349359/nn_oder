@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nn_oder/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants.dart';
 import '../../models/moment_model.dart';
@@ -36,16 +37,17 @@ class _MomentsScreenState extends State<MomentsScreen> {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().currentUser;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Moments'),
+        title: Text(l10n.moments),
         actions: [
           IconButton(
             icon: const Icon(Icons.camera_alt),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Post feature coming soon!')),
+                SnackBar(content: Text(l10n.postComingSoon)),
               );
             },
           ),
@@ -99,7 +101,7 @@ class _MomentsScreenState extends State<MomentsScreen> {
                         icon: const Icon(Icons.comment),
                         onPressed: () {},
                       ),
-                      const Text('Comment'),
+                      Text(l10n.comment),
                     ],
                   ),
                 ),

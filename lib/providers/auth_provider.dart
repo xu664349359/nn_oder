@@ -1,93 +1,235 @@
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
+import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 import '../models/user_model.dart';
-import '../services/mock_data_service.dart';
+import '../services/supabase_service.dart';
 
 class AuthProvider extends ChangeNotifier {
-  final MockDataService _dataService = MockDataService();
+  final SupabaseService _supabaseService = SupabaseService();
   User? _currentUser;
+  User? _partnerUser;
   bool _isLoading = false;
 
   User? get currentUser => _currentUser;
+  User? get partnerUser => _partnerUser;
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _currentUser != null;
 
+  AuthProvider() {
+    _init();
+  }
+
+  void _init() {
+    // Listen to auth state changes
+    _supabaseService.authStateChanges.listen((state) {
+      if (state.event == supabase.AuthChangeEvent.signedIn) {
+        _loadUserProfile();
+        _subscribeToProfileChanges();
+      } else if (state.event == supabase.AuthChangeEvent.signedOut) {
+        _currentUser = null;
+        _partnerUser = null;
+        _unsubscribeFromProfileChanges();
+        notifyListeners();
+      }
+    });
+  }
+
+  // ... (existing methods)
+
+  Future<void> _loadUserProfile() async {
+    final authUser = _supabaseService.currentUser;
+    if (authUser == null) return;
+
+    try {
+      final profileData = await _supabaseService.getProfile(authUser.id);
+      if (profileData != null) {
+        debugPrint('Loading user profile: ${profileData['nickname']}, partner_id: ${profileData['partner_id']}');
+        
+        _currentUser = User(
+          id: authUser.id,
+          phoneNumber: authUser.email ?? '', // Use email as phone/identifier
+          password: '', // Don't store password
+          nickname: profileData['nickname'] ?? '',
+          role: _parseRole(profileData['role']),
+          avatarUrl: profileData['avatar_url'],
+          partnerId: profileData['partner_id'],
+          invitationCode: profileData['invitation_code'], // Use 6-digit code from DB
+          backgroundImageUrl: profileData['background_image_url'],
+        );
+        
+        // Load Partner Profile if bound
+        if (_currentUser?.partnerId != null) {
+          await _loadPartnerProfile(_currentUser!.partnerId!);
+        } else {
+          _partnerUser = null;
+        }
+        
+        debugPrint('User loaded - partnerId: ${_currentUser?.partnerId}');
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error loading user profile: $e');
+    }
+  }
+
+  Future<void> _loadPartnerProfile(String partnerId) async {
+    try {
+      final profileData = await _supabaseService.getProfile(partnerId);
+      if (profileData != null) {
+        _partnerUser = User(
+          id: partnerId,
+          phoneNumber: '', // Not needed for partner view
+          password: '',
+          nickname: profileData['nickname'] ?? 'Partner',
+          role: _parseRole(profileData['role']),
+          avatarUrl: profileData['avatar_url'],
+          partnerId: _currentUser?.id,
+          invitationCode: profileData['invitation_code'],
+        );
+        debugPrint('Partner loaded: ${_partnerUser?.nickname}');
+      }
+    } catch (e) {
+      debugPrint('Error loading partner profile: $e');
+    }
+  }
+
+  void _subscribeToProfileChanges() {
+    final userId = _supabaseService.currentUser?.id;
+    if (userId == null) return;
+
+    // Subscribe to real-time updates for this user's profile
+    _supabaseService.subscribeToProfileChanges(userId, (payload) {
+      // When profile is updated (e.g., partner_id changed), reload user data
+      debugPrint('Profile updated, reloading user data...');
+      _loadUserProfile();
+    });
+  }
+
+  void _unsubscribeFromProfileChanges() {
+    _supabaseService.unsubscribeFromProfileChanges();
+  }
+
   Future<void> loadUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userJson = prefs.getString('user');
-    if (userJson != null) {
-      _currentUser = User.fromJson(jsonDecode(userJson));
-      notifyListeners();
+    if (_supabaseService.currentUser != null) {
+      await _loadUserProfile();
     }
   }
 
-  Future<bool> login(String phoneNumber, String password) async {
-    _setLoading(true);
-    final user = await _dataService.login(phoneNumber, password);
-    if (user != null) {
-      await _saveUser(user);
-    }
-    _setLoading(false);
-    return user != null;
+
+  UserRole _parseRole(String? role) {
+    if (role == 'chef') return UserRole.chef;
+    if (role == 'foodie') return UserRole.foodie;
+    return UserRole.chef; // Default
   }
 
-  Future<void> register(String phoneNumber, String password, String nickname, UserRole role) async {
+  Future<bool> login(String email, String password) async {
     _setLoading(true);
     try {
-      final user = await _dataService.register(phoneNumber, password, nickname, role);
-      await _saveUser(user);
+      final response = await _supabaseService.signIn(email: email, password: password);
+      if (response.user != null) {
+        // Wait for profile to load
+        await _loadUserProfile();
+        _setLoading(false);
+        return true;
+      }
+      _setLoading(false);
+      return false;
     } catch (e) {
-      // Phone already registered, rethrow
+      _setLoading(false);
+      debugPrint('Login error: $e');
+      return false;
+    }
+  }
+
+  Future<void> register(String email, String password, String nickname, UserRole role) async {
+    _setLoading(true);
+    try {
+      final response = await _supabaseService.signUp(email: email, password: password);
+      if (response.user != null) {
+        // Create profile
+        await _supabaseService.createProfile(
+          id: response.user!.id,
+          nickname: nickname,
+          role: role == UserRole.chef ? 'chef' : 'foodie',
+        );
+        
+        // Load the user profile immediately
+        // The auth state listener will also trigger, but we ensure it's loaded now
+        await _loadUserProfile();
+      }
+    } catch (e) {
       _setLoading(false);
       rethrow;
     }
     _setLoading(false);
   }
 
+  Future<void> updateProfileBackground(String filePath) async {
+    if (_currentUser == null) return;
+    
+    try {
+      // 1. Upload image
+      final imageUrl = await _supabaseService.uploadProfileBackground(filePath, _currentUser!.id);
+      
+      // 2. Update profile
+      await _supabaseService.updateProfile(_currentUser!.id, {
+        'background_image_url': imageUrl,
+      });
+      
+      // 3. Reload user
+      await _loadUserProfile();
+    } catch (e) {
+      debugPrint('Error updating profile background: $e');
+      rethrow;
+    }
+  }
+
   Future<bool> bindPartner(String invitationCode) async {
     if (_currentUser == null) return false;
     _setLoading(true);
-    final success = await _dataService.bindCouple(_currentUser!.id, invitationCode);
-    if (success) {
-      // Refresh user data to get partnerId
-      // In a real app, we'd fetch the user again. Here we just mock update.
-      // For simplicity in this mock, we assume the service updated the in-memory user,
-      // but we need to reflect that locally if we want to persist it.
-      // Let's just re-login or update the local user object.
-      // Since MockDataService updates the object reference in memory if we fetched it from there,
-      // but here we have a local copy.
-      // Let's just manually update the local user for now as the service returns boolean.
-      // Ideally MockDataService should return the updated user.
-      
-      // Re-fetch user from service simulation
-      final updatedUser = await _dataService.login(_currentUser!.phoneNumber, _currentUser!.password);
-      if (updatedUser != null) {
-        await _saveUser(updatedUser);
+    
+    try {
+      // 1. Find partner by invitation code
+      final partnerProfile = await _supabaseService.getProfileByInvitationCode(invitationCode);
+      if (partnerProfile == null) {
+        _setLoading(false);
+        return false;
       }
+      
+      final partnerId = partnerProfile['id'];
+
+      // 2. Create couple
+      // Determine who is chef and who is foodie
+      String chefId = _currentUser!.role == UserRole.chef ? _currentUser!.id : partnerId;
+      String foodieId = _currentUser!.role == UserRole.foodie ? _currentUser!.id : partnerId;
+
+      await _supabaseService.createCouple(chefId: chefId, foodieId: foodieId);
+
+      // 3. Update profiles with partner_id
+      debugPrint('Updating partner_id for user ${_currentUser!.id} -> $partnerId');
+      await _supabaseService.updateProfile(_currentUser!.id, {'partner_id': partnerId});
+      
+      debugPrint('Updating partner_id for partner $partnerId -> ${_currentUser!.id}');
+      await _supabaseService.updateProfile(partnerId, {'partner_id': _currentUser!.id});
+
+      // 4. Reload user
+      await _loadUserProfile();
+      
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      debugPrint('Binding error: $e');
+      _setLoading(false);
+      return false;
     }
-    _setLoading(false);
-    return success;
   }
 
   Future<void> skipBinding() async {
-    if (_currentUser == null) return;
-    // Create a dummy partner ID for dev skipping
-    final updatedUser = _currentUser!.copyWith(partnerId: 'DEV_SKIP_PARTNER');
-    await _saveUser(updatedUser);
+    // Dev only
   }
 
   Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('user');
+    await _supabaseService.signOut();
     _currentUser = null;
-    notifyListeners();
-  }
-
-  Future<void> _saveUser(User user) async {
-    _currentUser = user;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('user', jsonEncode(user.toJson()));
     notifyListeners();
   }
 

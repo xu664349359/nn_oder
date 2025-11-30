@@ -15,7 +15,7 @@ class MockDataService {
   List<User> _users = [];
   List<MenuItem> _menuItems = [];
   List<Order> _orders = [];
-  Intimacy _intimacy = Intimacy(value: 0, history: []);
+  Intimacy _intimacy = Intimacy(score: 0, level: 1, history: []);
 
   // Simulate delay
   Future<void> _delay() async => await Future.delayed(const Duration(milliseconds: 500));
@@ -126,7 +126,7 @@ class MockDataService {
       ));
     
     _intimacy = _intimacy.copyWith(
-      value: _intimacy.value + change,
+      score: _intimacy.score + change,
       history: newHistory,
     );
   }
@@ -141,7 +141,7 @@ class MockDataService {
         imageUrl: 'assets/images/pasta.jpg', // Placeholder
         intimacyPrice: 50,
         ingredients: ['Pasta', 'Tomato', 'Cream', 'Love'],
-        steps: [RecipeStep(description: 'Boil pasta'), RecipeStep(description: 'Mix sauce')],
+        steps: [RecipeStep(stepNumber: 1, description: 'Boil pasta'), RecipeStep(stepNumber: 2, description: 'Mix sauce')],
       ),
       MenuItem(
         id: '2',
@@ -150,7 +150,7 @@ class MockDataService {
         imageUrl: 'assets/images/pancakes.jpg', // Placeholder
         intimacyPrice: 30,
         ingredients: ['Flour', 'Milk', 'Eggs', 'Honey'],
-        steps: [RecipeStep(description: 'Mix batter'), RecipeStep(description: 'Cook on pan')],
+        steps: [RecipeStep(stepNumber: 1, description: 'Mix batter'), RecipeStep(stepNumber: 2, description: 'Cook on pan')],
       ),
     ];
   }

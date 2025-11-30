@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:nn_oder/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -25,6 +26,7 @@ class _BindingScreenState extends State<BindingScreen> {
   }
 
   Future<void> _bindPartner() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_codeController.text.isEmpty) return;
     
     setState(() => _isBinding = true);
@@ -33,12 +35,12 @@ class _BindingScreenState extends State<BindingScreen> {
 
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Connected with your partner! ❤️')),
+        SnackBar(content: Text(l10n.connected)),
       );
       // Router will handle redirect
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid code or connection failed.')),
+        SnackBar(content: Text(l10n.connectionFailed)),
       );
     }
   }
@@ -46,22 +48,15 @@ class _BindingScreenState extends State<BindingScreen> {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().currentUser;
+    final l10n = AppLocalizations.of(context)!;
     if (user == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
     final isChef = user.role == UserRole.chef;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Connect Partner'),
-        actions: [
-          TextButton(
-            onPressed: () async {
-               await context.read<AuthProvider>().skipBinding();
-               // Router will handle redirect now that partnerId is set
-            }, 
-            child: const Text('Skip (Dev)'),
-          )
-        ],
+        title: Text(l10n.connectPartner),
+
       ),
       body: SafeArea(
         child: Padding(
@@ -77,7 +72,7 @@ class _BindingScreenState extends State<BindingScreen> {
               const SizedBox(height: 32),
               if (isChef) ...[
                 Text(
-                  'Your Invitation Code',
+                  l10n.yourCode,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 16),
@@ -98,32 +93,31 @@ class _BindingScreenState extends State<BindingScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Share this code with your Foodie to connect!',
+                Text(
+                  l10n.shareCode,
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: AppColors.textSecondary),
+                  style: const TextStyle(color: AppColors.textSecondary),
                 ),
               ] else ...[
                 Text(
-                  'Enter Invitation Code',
+                  l10n.enterCode,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: _codeController,
                   textAlign: TextAlign.center,
-                  decoration: const InputDecoration(
-                    hintText: 'Enter code from Chef',
+                  decoration: InputDecoration(
+                    hintText: l10n.enterCodeHint,
                   ),
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  keyboardType: TextInputType.text,
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: _isBinding ? null : _bindPartner,
                   child: _isBinding
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Connect'),
+                      : Text(l10n.connect),
                 ),
               ],
             ],

@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:nn_oder/l10n/generated/app_localizations.dart';
 import '../../core/constants.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/user_model.dart';
+import '../../providers/locale_provider.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -69,260 +71,332 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().currentUser;
+    final l10n = AppLocalizations.of(context)!;
     if (user == null) return const SizedBox();
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F7),
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text(
+          l10n.settings,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
         actions: [
           if (_isEditing)
             TextButton(
               onPressed: _saveChanges,
-              child: const Text('Save', style: TextStyle(color: Colors.white)),
+              child: Text(l10n.save, style: const TextStyle(fontWeight: FontWeight.bold)),
             ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Profile Section
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    Text(
-                      'Profile Information',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    
-                    // Avatar
-                    Center(
-                      child: Stack(
-                        children: [
-                          Container(
-                            width: 100,
-                            height: 100,
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: AppColors.primary, width: 2),
+            // Profile Header
+            const SizedBox(height: 16),
+            Center(
+              child: Column(
+                children: [
+                  Stack(
+                    children: [
+                      Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
                             ),
-                            child: _customAvatarPath != null
-                                ? ClipOval(
-                                    child: Image.file(
-                                      File(_customAvatarPath!),
-                                      fit: BoxFit.cover,
-                                    ),
-                                  )
-                                : user.avatarUrl != null && user.avatarUrl!.isNotEmpty
-                                    ? ClipOval(
-                                        child: Image.file(
-                                          File(user.avatarUrl!),
-                                          fit: BoxFit.cover,
-                                        ),
-                                      )
-                                    : Center(
-                                        child: Text(
-                                          _getDefaultAvatar(),
-                                          style: const TextStyle(fontSize: 50),
-                                        ),
-                                      ),
+                          ],
+                        ),
+                        child: ClipOval(
+                          child: _customAvatarPath != null
+                              ? Image.file(File(_customAvatarPath!), fit: BoxFit.cover)
+                              : user.avatarUrl != null && user.avatarUrl!.isNotEmpty
+                                  ? Image.network(user.avatarUrl!, fit: BoxFit.cover)
+                                  : null,
+                        ),
+                      ),
+                      if (_customAvatarPath == null && (user.avatarUrl == null || user.avatarUrl!.isEmpty))
+                        Positioned.fill(
+                          child: Center(
+                            child: Text(
+                              _getDefaultAvatar(),
+                              style: const TextStyle(fontSize: 50),
+                            ),
                           ),
-                          if (_isEditing)
-                            Positioned(
-                              right: 0,
-                              bottom: 0,
-                              child: GestureDetector(
-                                onTap: _pickAvatar,
-                                child: Container(
-                                  width: 32,
-                                  height: 32,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.accent,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: Colors.white, width: 2),
+                        ),
+                      if (_isEditing)
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: GestureDetector(
+                            onTap: _pickAvatar,
+                            child: Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: AppColors.primary,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 2),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    blurRadius: 5,
                                   ),
-                                  child: const Icon(
-                                    Icons.edit,
-                                    color: Colors.white,
-                                    size: 18,
-                                  ),
-                                ),
+                                ],
                               ),
+                              child: const Icon(Icons.edit, color: Colors.white, size: 16),
                             ),
-                        ],
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // Nickname
-                    TextField(
-                      controller: _nicknameController,
-                      enabled: _isEditing,
-                      decoration: const InputDecoration(
-                        labelText: 'Nickname',
-                        prefixIcon: Icon(Icons.person),
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // Phone (Read-only)
-                    TextField(
-                      controller: _phoneController,
-                      enabled: false,
-                      decoration: const InputDecoration(
-                        labelText: 'Phone Number',
-                        prefixIcon: Icon(Icons.phone),
-                        helperText: 'Phone number cannot be changed',
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // Role (Read-only)
-                    ListTile(
-                      leading: const Icon(Icons.badge),
-                      title: const Text('Role'),
-                      trailing: Chip(
-                        label: Text(
-                          user.role == UserRole.chef ? 'Chef' : 'Foodie',
-                          style: const TextStyle(color: Colors.white),
+                          ),
                         ),
-                        backgroundColor: AppColors.primary,
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    if (!_isEditing)
-                      ElevatedButton.icon(
-                        onPressed: () => setState(() => _isEditing = true),
-                        icon: const Icon(Icons.edit),
-                        label: const Text('Edit Profile'),
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 48),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  if (_isEditing)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 40),
+                      child: TextField(
+                        controller: _nicknameController,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          hintText: l10n.nickname,
                         ),
                       ),
-                  ],
+                    )
+                  else
+                    Text(
+                      user.nickname,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      user.role == UserRole.chef ? '${l10n.chef} 👨‍🍳' : '${l10n.foodie} 🐛',
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            if (!_isEditing) ...[
+              // Settings Groups
+              _buildSettingsGroup([
+                _buildSettingsItem(
+                  icon: Icons.person_outline,
+                  iconColor: Colors.blue,
+                  title: l10n.editProfile,
+                  onTap: () => setState(() => _isEditing = true),
+                ),
+                _buildSettingsItem(
+                  icon: Icons.notifications_outlined,
+                  iconColor: Colors.orange,
+                  title: l10n.notifications,
+                  trailing: Switch.adaptive(
+                    value: true,
+                    onChanged: (val) {},
+                    activeColor: AppColors.primary,
+                  ),
+                ),
+                _buildSettingsItem(
+                  icon: Icons.language,
+                  iconColor: Colors.purple,
+                  title: l10n.language,
+                  value: Localizations.localeOf(context).languageCode == 'zh' ? '中文' : 'English',
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                      ),
+                      builder: (context) => SafeArea(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ListTile(
+                              title: const Text('English'),
+                              trailing: Localizations.localeOf(context).languageCode == 'en'
+                                  ? const Icon(Icons.check, color: AppColors.primary)
+                                  : null,
+                              onTap: () {
+                                context.read<LocaleProvider>().setLocale(const Locale('en'));
+                                Navigator.pop(context);
+                              },
+                            ),
+                            ListTile(
+                              title: const Text('中文'),
+                              trailing: Localizations.localeOf(context).languageCode == 'zh'
+                                  ? const Icon(Icons.check, color: AppColors.primary)
+                                  : null,
+                              onTap: () {
+                                context.read<LocaleProvider>().setLocale(const Locale('zh'));
+                                Navigator.pop(context);
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                _buildSettingsItem(
+                  icon: Icons.dark_mode_outlined,
+                  iconColor: Colors.black87,
+                  title: l10n.darkMode,
+                  trailing: Switch.adaptive(
+                    value: false,
+                    onChanged: (val) {},
+                    activeColor: AppColors.primary,
+                  ),
+                ),
+              ]),
+
+              const SizedBox(height: 24),
+
+              _buildSettingsGroup([
+                _buildSettingsItem(
+                  icon: Icons.info_outline,
+                  iconColor: Colors.teal,
+                  title: l10n.about,
+                  onTap: () {
+                    showAboutDialog(
+                      context: context,
+                      applicationName: l10n.appTitle,
+                      applicationVersion: '1.0.0',
+                      applicationIcon: const Icon(Icons.favorite, color: AppColors.primary),
+                    );
+                  },
+                ),
+                _buildSettingsItem(
+                  icon: Icons.link_off,
+                  iconColor: Colors.redAccent,
+                  title: l10n.unbindPartner,
+                  isDestructive: true,
+                  onTap: () {
+                    // Unbind logic
+                  },
+                ),
+              ]),
+
+              const SizedBox(height: 24),
+
+              TextButton(
+                onPressed: () async {
+                  await context.read<AuthProvider>().logout();
+                  if (context.mounted) context.go('/login');
+                },
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.red,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                child: Text(
+                  l10n.logout,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
-            ),
-            
-            const SizedBox(height: 24),
-            
-            // App Settings Section
-            Card(
-              child: Column(
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.notifications),
-                    title: const Text('Notifications'),
-                    trailing: Switch(
-                      value: true,
-                      onChanged: (value) {
-                        // TODO: Implement notification toggle
-                      },
-                    ),
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.language),
-                    title: const Text('Language'),
-                    trailing: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text('中文'),
-                        SizedBox(width: 8),
-                        Icon(Icons.chevron_right),
-                      ],
-                    ),
-                    onTap: () {
-                      // TODO: Implement language selection
-                    },
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.dark_mode),
-                    title: const Text('Dark Mode'),
-                    trailing: Switch(
-                      value: false,
-                      onChanged: (value) {
-                        // TODO: Implement theme toggle
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 24),
-            
-            // Other Actions
-            Card(
-              child: Column(
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.info, color: Colors.blue),
-                    title: const Text('About'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('About Love Kitchen'),
-                          content: const Text('Version 1.0.0\n\nA romantic food ordering app for couples.'),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text('OK'),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.logout, color: Colors.red),
-                    title: const Text('Logout', style: TextStyle(color: Colors.red)),
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Logout'),
-                          content: const Text('Are you sure you want to logout?'),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text('Cancel'),
-                            ),
-                            TextButton(
-                              onPressed: () async {
-                                Navigator.pop(context); // Close dialog first
-                                await context.read<AuthProvider>().logout();
-                                if (context.mounted) {
-                                  context.go('/login');
-                                }
-                              },
-                              child: const Text('Logout', style: TextStyle(color: Colors.red)),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
+              const SizedBox(height: 32),
+            ],
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingsGroup(List<Widget> children) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: children,
+      ),
+    );
+  }
+
+  Widget _buildSettingsItem({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    String? value,
+    Widget? trailing,
+    VoidCallback? onTap,
+    bool isDestructive = false,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: iconColor.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: iconColor, size: 20),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: isDestructive ? Colors.red : AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              if (value != null)
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[500],
+                  ),
+                ),
+              if (trailing != null)
+                trailing
+              else if (onTap != null)
+                Icon(Icons.chevron_right, color: Colors.grey[400], size: 20),
+            ],
+          ),
         ),
       ),
     );

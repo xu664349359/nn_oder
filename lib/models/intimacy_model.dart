@@ -1,13 +1,23 @@
 
 class Intimacy {
-  final int value;
+  final int score;
+  final int level;
   final List<IntimacyRecord> history;
 
-  Intimacy({required this.value, required this.history});
+  Intimacy({
+    required this.score,
+    required this.level,
+    this.history = const [],
+  });
   
-  Intimacy copyWith({int? value, List<IntimacyRecord>? history}) {
+  Intimacy copyWith({
+    int? score,
+    int? level,
+    List<IntimacyRecord>? history,
+  }) {
     return Intimacy(
-      value: value ?? this.value,
+      score: score ?? this.score,
+      level: level ?? this.level,
       history: history ?? this.history,
     );
   }

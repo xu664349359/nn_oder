@@ -28,7 +28,7 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
 
     if (user == null) return;
 
-    if ((intimacy?.value ?? 0) < widget.menuItem.intimacyPrice) {
+    if ((intimacy?.score ?? 0) < widget.menuItem.intimacyPrice) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Not enough love points! Go hug your Chef! ❤️')),
       );
@@ -63,10 +63,10 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
       _showSuccess = true;
     });
 
-    // Wait for animation then go back
+    // Wait for animation then return to previous screen
     await Future.delayed(const Duration(seconds: 2));
     if (mounted) {
-      context.go('/foodie/orders');
+      Navigator.of(context).pop(); // Return to menu/home instead of going to orders
     }
   }
 
