@@ -12,6 +12,10 @@ class Order {
   final DateTime createdAt;
   final int? rating;
   final String? reviewComment;
+  final bool washDishes;
+  final int? originalIntimacyCost;
+  final int? actualIntimacyCost;
+  final int? discountAmount;
 
   Order({
     required this.id,
@@ -24,6 +28,10 @@ class Order {
     required this.createdAt,
     this.rating,
     this.reviewComment,
+    this.washDishes = false,
+    this.originalIntimacyCost,
+    this.actualIntimacyCost,
+    this.discountAmount,
   });
   
   Order copyWith({
@@ -37,6 +45,10 @@ class Order {
     DateTime? createdAt,
     int? rating,
     String? reviewComment,
+    bool? washDishes,
+    int? originalIntimacyCost,
+    int? actualIntimacyCost,
+    int? discountAmount,
   }) {
     return Order(
       id: id ?? this.id,
@@ -49,6 +61,10 @@ class Order {
       createdAt: createdAt ?? this.createdAt,
       rating: rating ?? this.rating,
       reviewComment: reviewComment ?? this.reviewComment,
+      washDishes: washDishes ?? this.washDishes,
+      originalIntimacyCost: originalIntimacyCost ?? this.originalIntimacyCost,
+      actualIntimacyCost: actualIntimacyCost ?? this.actualIntimacyCost,
+      discountAmount: discountAmount ?? this.discountAmount,
     );
   }
 
@@ -67,6 +83,10 @@ class Order {
       createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
       rating: json['rating'],
       reviewComment: json['review_comment'],
+      washDishes: json['wash_dishes'] ?? false,
+      originalIntimacyCost: json['original_intimacy_cost'],
+      actualIntimacyCost: json['actual_intimacy_cost'],
+      discountAmount: json['discount_amount'],
     );
   }
 
@@ -82,6 +102,10 @@ class Order {
       'created_at': createdAt.toIso8601String(),
       if (rating != null) 'rating': rating,
       if (reviewComment != null) 'review_comment': reviewComment,
+      'wash_dishes': washDishes,
+      if (originalIntimacyCost != null) 'original_intimacy_cost': originalIntimacyCost,
+      if (actualIntimacyCost != null) 'actual_intimacy_cost': actualIntimacyCost,
+      if (discountAmount != null) 'discount_amount': discountAmount,
     };
   }
 }

@@ -83,5 +83,38 @@
   "forgotPassword": "Forgot Password?",
   "orLoginWith": "Or login with",
   "noAccountRegister": "No account? Register now",
-  "recipeNotFound": "Recipe not found"
+  "recipeNotFound": "Recipe not found",
+  "intimacyBalance": "Intimacy Balance",
+  "addToCart": "Add to Cart",
+  "shoppingCart": "Shopping Cart",
+  "washDishes": "Wash Dishes",
+  "dishWashingDiscount": "Dish Washing Discount (-20%)",
+  "quantity": "Quantity",
+  "subtotal": "Subtotal",
+  "discount": "Discount",
+  "total": "Total",
+  "checkout": "Checkout",
+  "insufficientBalance": "Insufficient intimacy balance",
+  "cartEmpty": "Your cart is empty",
+  "checkoutSuccess": "Order placed successfully!",
+  "itemsInCart": "{count} items",
+  "@itemsInCart": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "createTask": "Create Task",
+  "taskTitle": "Task Title",
+  "taskDescription": "Task Description",
+  "rewardPoints": "Reward Points",
+  "create": "Create",
+  "coupleTasks": "Couple Tasks",
+  "taskMarket": "Task Market",
+  "myTasks": "My Tasks",
+  "newTask": "New Task",
+  "noCoupleFound": "No couple connection found",
+  "noTasksYet": "No tasks available yet",
+  "noActiveTasks": "No active tasks"
 }

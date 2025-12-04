@@ -12,13 +12,15 @@ import 'screens/unbound/invitation_screen.dart';
 import 'screens/moments/moments_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/binding_success/binding_success_screen.dart';
+import 'screens/foodie/shopping_cart_screen.dart';
+import 'screens/foodie/checkout_screen.dart';
 import 'models/menu_model.dart';
 
-final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
 GoRouter createRouter(AuthProvider authProvider) {
   return GoRouter(
-    navigatorKey: _rootNavigatorKey,
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/',
     refreshListenable: authProvider,
     redirect: (context, state) {
@@ -118,7 +120,16 @@ GoRouter createRouter(AuthProvider authProvider) {
     GoRoute(
       path: '/foodie/menu/detail',
       builder: (context, state) {
-        final menuItem = state.extra as MenuItem;
+        Object? extra = state.extra;
+        MenuItem menuItem;
+        if (extra is MenuItem) {
+          menuItem = extra;
+        } else if (extra is Map<String, dynamic>) {
+          menuItem = MenuItem.fromJson(extra);
+        } else {
+          // Fallback or error handling
+          return const Scaffold(body: Center(child: Text('Error: Invalid menu item data')));
+        }
         return MenuDetailScreen(menuItem: menuItem);
       },
     ),
@@ -137,6 +148,14 @@ GoRouter createRouter(AuthProvider authProvider) {
     GoRoute(
       path: '/binding-success',
       builder: (context, state) => const BindingSuccessScreen(),
+    ),
+    GoRoute(
+      path: '/foodie/cart',
+      builder: (context, state) => const ShoppingCartScreen(),
+    ),
+    GoRoute(
+      path: '/foodie/checkout',
+      builder: (context, state) => const CheckoutScreen(),
     ),
   ],
   );

@@ -601,6 +601,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Recipe not found'**
   String get recipeNotFound;
+
+  /// No description provided for @intimacyBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Intimacy Balance'**
+  String get intimacyBalance;
+
+  /// No description provided for @addToCart.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to Cart'**
+  String get addToCart;
+
+  /// No description provided for @shoppingCart.
+  ///
+  /// In en, this message translates to:
+  /// **'Shopping Cart'**
+  String get shoppingCart;
+
+  /// No description provided for @washDishes.
+  ///
+  /// In en, this message translates to:
+  /// **'Wash Dishes'**
+  String get washDishes;
+
+  /// No description provided for @dishWashingDiscount.
+  ///
+  /// In en, this message translates to:
+  /// **'Dish Washing Discount (-20%)'**
+  String get dishWashingDiscount;
+
+  /// No description provided for @quantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity'**
+  String get quantity;
+
+  /// No description provided for @subtotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtotal'**
+  String get subtotal;
+
+  /// No description provided for @discount.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount'**
+  String get discount;
+
+  /// No description provided for @total.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get total;
+
+  /// No description provided for @checkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkout'**
+  String get checkout;
+
+  /// No description provided for @insufficientBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Insufficient intimacy balance'**
+  String get insufficientBalance;
+
+  /// No description provided for @cartEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Your cart is empty'**
+  String get cartEmpty;
+
+  /// No description provided for @checkoutSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Order placed successfully!'**
+  String get checkoutSuccess;
+
+  /// No description provided for @itemsInCart.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} items'**
+  String itemsInCart(int count);
+
+  /// No description provided for @createTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Task'**
+  String get createTask;
+
+  /// No description provided for @taskTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Task Title'**
+  String get taskTitle;
+
+  /// No description provided for @taskDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Task Description'**
+  String get taskDescription;
+
+  /// No description provided for @rewardPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Reward Points'**
+  String get rewardPoints;
+
+  /// No description provided for @create.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get create;
+
+  /// No description provided for @coupleTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Couple Tasks'**
+  String get coupleTasks;
+
+  /// No description provided for @taskMarket.
+  ///
+  /// In en, this message translates to:
+  /// **'Task Market'**
+  String get taskMarket;
+
+  /// No description provided for @myTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'My Tasks'**
+  String get myTasks;
+
+  /// No description provided for @newTask.
+  ///
+  /// In en, this message translates to:
+  /// **'New Task'**
+  String get newTask;
+
+  /// No description provided for @noCoupleFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No couple connection found'**
+  String get noCoupleFound;
+
+  /// No description provided for @noTasksYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No tasks available yet'**
+  String get noTasksYet;
+
+  /// No description provided for @noActiveTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'No active tasks'**
+  String get noActiveTasks;
 }
 
 class _AppLocalizationsDelegate

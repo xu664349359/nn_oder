@@ -8,6 +8,7 @@ import '../../core/constants.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/user_model.dart';
 import '../../providers/locale_provider.dart';
+import '../../widgets/modern_dialog.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -297,8 +298,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   iconColor: Colors.redAccent,
                   title: l10n.unbindPartner,
                   isDestructive: true,
-                  onTap: () {
-                    // Unbind logic
+                  onTap: () async {
+                    final confirm = await ModernDialog.show<bool>(
+                      context: context,
+                      title: l10n.unbindPartner,
+                      description: 'This will remove your connection with your partner. Are you sure?',
+                      icon: Icons.link_off,
+                      iconColor: Colors.red,
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: Text(l10n.cancel),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: Text(l10n.confirm),
+                        ),
+                      ],
+                    );
+
+                    if (confirm == true) {
+                      // TODO: Implement actual unbind logic
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Unbind feature coming soon')),
+                      );
+                    }
                   },
                 ),
               ]),
@@ -307,8 +336,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
               TextButton(
                 onPressed: () async {
-                  await context.read<AuthProvider>().logout();
-                  if (context.mounted) context.go('/login');
+                  final confirm = await ModernDialog.show<bool>(
+                    context: context,
+                    title: l10n.logout,
+                    description: 'Are you sure you want to log out?',
+                    icon: Icons.logout,
+                    iconColor: Colors.red,
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: Text(l10n.cancel),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: Text(l10n.confirm),
+                      ),
+                    ],
+                  );
+
+                  if (confirm == true) {
+                    await context.read<AuthProvider>().logout();
+                    if (context.mounted) context.go('/login');
+                  }
                 },
                 style: TextButton.styleFrom(
                   foregroundColor: Colors.red,

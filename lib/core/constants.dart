@@ -25,6 +25,24 @@ class AppColors {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
+
+  // Dark 3D Theme Colors
+  static const Color darkBackground = Color(0xFF1A1F25); // Deep Navy/Black
+  static const Color glassWhite = Color(0x33FFFFFF); // Translucent white
+  static const Color glassBorder = Color(0x66FFFFFF); // More opaque white for borders
+  static const Color cardSurface = Color(0xFFF5F5F7); // Off-white for cards
+  
+  static const LinearGradient peachGradient = LinearGradient(
+    colors: [Color(0xFFFF9A8B), Color(0xFFFF6A88), Color(0xFFFF99AC)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient glassGradient = LinearGradient(
+    colors: [Color(0x4DFFFFFF), Color(0x1AFFFFFF)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 }
 
 class AppConstants {

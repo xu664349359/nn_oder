@@ -6,6 +6,7 @@ import '../../core/constants.dart';
 import '../../models/menu_model.dart';
 import '../../services/supabase_service.dart';
 import '../../widgets/video_player_dialog.dart' as vpd;
+import '../../widgets/modern_dialog.dart';
 
 class RecipeEditorScreen extends StatefulWidget {
   final MenuItem menuItem;
@@ -68,23 +69,27 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
   }
 
   Future<void> _deleteStep(RecipeStep step) async {
-    final confirm = await showDialog<bool>(
+    final confirm = await ModernDialog.show<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Step'),
-        content: const Text('Are you sure you want to delete this step?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+      title: 'Delete Step',
+      description: 'Are you sure you want to delete this step?',
+      icon: Icons.delete_forever,
+      iconColor: Colors.red,
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context, true),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+          child: const Text('Delete'),
+        ),
+      ],
     );
 
     if (confirm == true && step.id != null) {
@@ -369,8 +374,9 @@ class _RecipeStepDialogState extends State<_RecipeStepDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.existingStep != null ? 'Edit Step' : 'Add Step'),
+    return ModernDialog(
+      title: widget.existingStep != null ? 'Edit Step' : 'Add Step',
+      icon: widget.existingStep != null ? Icons.edit : Icons.add_circle,
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -381,6 +387,7 @@ class _RecipeStepDialogState extends State<_RecipeStepDialog> {
               decoration: const InputDecoration(
                 labelText: 'Description',
                 border: OutlineInputBorder(),
+                alignLabelWithHint: true,
               ),
               maxLines: 3,
             ),
@@ -393,6 +400,10 @@ class _RecipeStepDialogState extends State<_RecipeStepDialog> {
               label: Text(_selectedImage != null || _imageUrl != null
                   ? 'Change Image'
                   : 'Add Image (Optional)'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
             ),
             if (_selectedImage != null)
               Padding(
@@ -420,6 +431,10 @@ class _RecipeStepDialogState extends State<_RecipeStepDialog> {
               label: Text(_selectedVideo != null || _videoUrl != null
                   ? 'Change Video'
                   : 'Add Video (Optional)'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
             ),
             if (_selectedVideo != null || _videoUrl != null)
               const Padding(
@@ -442,11 +457,16 @@ class _RecipeStepDialogState extends State<_RecipeStepDialog> {
         ),
         ElevatedButton(
           onPressed: _isUploading ? null : _save,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
           child: _isUploading
               ? const SizedBox(
                   height: 20,
                   width: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                 )
               : const Text('Save'),
         ),

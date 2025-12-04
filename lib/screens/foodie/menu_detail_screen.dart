@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:uuid/uuid.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:nn_oder/l10n/generated/app_localizations.dart';
 import '../../core/constants.dart';
 import '../../models/menu_model.dart';
-import '../../models/order_model.dart';
 import '../../providers/auth_provider.dart';
-import '../../providers/data_provider.dart';
+import '../../providers/cart_provider.dart';
+import '../../router.dart';
+import '../../widgets/modern_dialog.dart';
 
 class MenuDetailScreen extends StatefulWidget {
   final MenuItem menuItem;
@@ -19,82 +20,99 @@ class MenuDetailScreen extends StatefulWidget {
 }
 
 class _MenuDetailScreenState extends State<MenuDetailScreen> {
-  bool _isOrdering = false;
-  bool _showSuccess = false;
+  bool _isAddingToCart = false;
+  int _quantity = 1;
 
-  Future<void> _placeOrder() async {
+  Future<void> _addToCart() async {
     final user = context.read<AuthProvider>().currentUser;
-    final intimacy = context.read<DataProvider>().intimacy;
-
     if (user == null) return;
 
-    if ((intimacy?.score ?? 0) < widget.menuItem.intimacyPrice) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Not enough love points! Go hug your Chef! ❤️')),
+    setState(() => _isAddingToCart = true);
+
+    try {
+      await context.read<CartProvider>().addItem(
+        user.id,
+        widget.menuItem.id,
+        quantity: _quantity,
       );
-      return;
-    }
 
-    setState(() => _isOrdering = true);
-
-    // Create order
-    final order = Order(
-      id: const Uuid().v4(),
-      foodieId: user.id,
-      chefId: user.partnerId!, // Assumes bound
-      menuItemId: widget.menuItem.id,
-      menuItemName: widget.menuItem.name,
-      menuItemImage: widget.menuItem.imageUrl,
-      status: OrderStatus.pending,
-      createdAt: DateTime.now(),
-    );
-
-    // Deduct intimacy
-    await context.read<DataProvider>().updateIntimacy(
-      -widget.menuItem.intimacyPrice,
-      'Ordered ${widget.menuItem.name}',
-    );
-
-    // Place order
-    await context.read<DataProvider>().createOrder(order);
-
-    setState(() {
-      _isOrdering = false;
-      _showSuccess = true;
-    });
-
-    // Wait for animation then return to previous screen
-    await Future.delayed(const Duration(seconds: 2));
-    if (mounted) {
-      Navigator.of(context).pop(); // Return to menu/home instead of going to orders
+      if (mounted) {
+        ModernDialog.show(
+          context: context,
+          title: 'Added to Cart!',
+          icon: Icons.check_circle,
+          iconColor: Colors.green,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  widget.menuItem.imageUrl,
+                  height: 120,
+                  width: 120,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    height: 120,
+                    width: 120,
+                    color: Colors.grey[200],
+                    child: const Icon(Icons.restaurant, size: 40, color: Colors.grey),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                widget.menuItem.name,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Quantity: $_quantity',
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Keep Shopping'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                final ctx = rootNavigatorKey.currentContext;
+                if (ctx != null) {
+                  ctx.push('/foodie/cart');
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('View Cart'),
+            ),
+          ],
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error adding to cart: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isAddingToCart = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_showSuccess) {
-      return Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.favorite, color: AppColors.primary, size: 100)
-                  .animate()
-                  .scale(duration: 600.ms, curve: Curves.elasticOut),
-              const SizedBox(height: 24),
-              Text(
-                'Order Sent with Love!',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ).animate().fadeIn(delay: 300.ms),
-            ],
-          ),
-        ),
-      );
-    }
-
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -112,7 +130,7 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.asset(
+                  Image.network(
                     widget.menuItem.imageUrl,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(color: Colors.grey),
@@ -205,22 +223,86 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
                       ),
                     );
                   }),
-                  const SizedBox(height: 80), // Space for FAB
+                  const SizedBox(height: 100), // Space for bottom bar
                 ],
               ),
             ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _isOrdering ? null : _placeOrder,
-        icon: _isOrdering
-            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white))
-            : const Icon(Icons.favorite),
-        label: Text(_isOrdering ? 'Sending...' : 'I Want This!'),
-        backgroundColor: AppColors.accent,
+      bottomSheet: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: Row(
+            children: [
+              // Quantity Selector
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      onPressed: _quantity > 1 ? () => setState(() => _quantity--) : null,
+                      icon: const Icon(Icons.remove),
+                      color: AppColors.primary,
+                    ),
+                    Text(
+                      '$_quantity',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    IconButton(
+                      onPressed: () => setState(() => _quantity++),
+                      icon: const Icon(Icons.add),
+                      color: AppColors.primary,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              // Add to Cart Button
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _isAddingToCart ? null : _addToCart,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                  ),
+                  child: _isAddingToCart
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.shopping_cart_outlined),
+                            const SizedBox(width: 8),
+                            Text(l10n.addToCart),
+                          ],
+                        ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }

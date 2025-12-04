@@ -83,5 +83,38 @@
   "forgotPassword": "忘记密码?",
   "orLoginWith": "或使用以下方式登录",
   "noAccountRegister": "还没有账户？立即注册",
-  "recipeNotFound": "未找到食谱"
+  "recipeNotFound": "未找到食谱",
+  "intimacyBalance": "亲密值余额",
+  "addToCart": "加入购物车",
+  "shoppingCart": "购物车",
+  "washDishes": "洗漱餐具",
+  "dishWashingDiscount": "洗碗折扣 (-20%)",
+  "quantity": "数量",
+  "subtotal": "小计",
+  "discount": "折扣",
+  "total": "总计",
+  "checkout": "结算",
+  "insufficientBalance": "亲密值余额不足",
+  "cartEmpty": "购物车是空的",
+  "checkoutSuccess": "下单成功！",
+  "itemsInCart": "{count} 件商品",
+  "@itemsInCart": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "createTask": "创建任务",
+  "taskTitle": "任务标题",
+  "taskDescription": "任务描述",
+  "rewardPoints": "奖励积分",
+  "create": "创建",
+  "coupleTasks": "情侣任务",
+  "taskMarket": "任务市场",
+  "myTasks": "我的任务",
+  "newTask": "新任务",
+  "noCoupleFound": "未找到伴侣连接",
+  "noTasksYet": "暂无可用任务",
+  "noActiveTasks": "暂无进行中的任务"
 }

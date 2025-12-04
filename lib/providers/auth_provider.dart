@@ -233,6 +233,17 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> refreshBalance() async {
+    if (_currentUser == null) return;
+    try {
+      final balance = await _supabaseService.getIntimacyBalance(_currentUser!.id);
+      _currentUser = _currentUser!.copyWith(intimacyBalance: balance);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error refreshing balance: $e');
+    }
+  }
+
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();

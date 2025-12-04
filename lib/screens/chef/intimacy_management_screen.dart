@@ -1,11 +1,14 @@
+import 'dart:ui';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:nn_oder/l10n/generated/app_localizations.dart';
 import '../../core/constants.dart';
 import '../../providers/data_provider.dart';
-import '../../providers/auth_provider.dart';
-import '../../models/user_model.dart';
+import '../../models/intimacy_task_model.dart';
+import '../intimacy/couple_tasks_screen.dart';
+import '../intimacy/official_tasks_screen.dart';
 
 class IntimacyManagementScreen extends StatefulWidget {
   const IntimacyManagementScreen({super.key});
@@ -15,138 +18,364 @@ class IntimacyManagementScreen extends StatefulWidget {
 }
 
 class _IntimacyManagementScreenState extends State<IntimacyManagementScreen> {
-  final _reasonController = TextEditingController();
-
   @override
-  void dispose() {
-    _reasonController.dispose();
-    super.dispose();
-  }
-
-  void _updateIntimacy(int change) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(change > 0 ? AppLocalizations.of(context)!.addLove : AppLocalizations.of(context)!.reduceLove),
-        content: TextField(
-          controller: _reasonController,
-          decoration: InputDecoration(hintText: AppLocalizations.of(context)!.reasonOptional),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(AppLocalizations.of(context)!.cancel),
+  Widget build(BuildContext context) {
+    final intimacyBalance = context.watch<DataProvider>().intimacyBalance;
+    
+    return Scaffold(
+      backgroundColor: AppColors.darkBackground,
+      body: Stack(
+        children: [
+          // Background Elements
+          Positioned(
+            top: -100,
+            left: -50,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    Colors.white.withOpacity(0.1),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
           ),
-          ElevatedButton(
-            onPressed: () {
-              context.read<DataProvider>().updateIntimacy(
-                change,
-                _reasonController.text.isEmpty ? (change > 0 ? AppLocalizations.of(context)!.bonus : AppLocalizations.of(context)!.penalty) : _reasonController.text,
-              );
-              _reasonController.clear();
-              Navigator.pop(context);
-            },
-            child: Text(AppLocalizations.of(context)!.confirm),
+          
+          // Floating Decorations (Simulated 3D objects)
+          _buildFloatingIcon(Icons.favorite, Colors.redAccent, 50, 100, 2.0),
+          _buildFloatingIcon(Icons.star, Colors.amber, 300, 150, 3.0),
+          _buildFloatingIcon(Icons.local_dining, Colors.orange, 80, 500, 2.5),
+          
+          CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                expandedHeight: 320.0,
+                floating: false,
+                pinned: true,
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                flexibleSpace: FlexibleSpaceBar(
+                  background: SafeArea(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 20),
+                        const Text(
+                          'Intimacy Center',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ).animate().fadeIn().slideY(begin: -0.5, end: 0),
+                        const SizedBox(height: 30),
+                        _build3DGlassCard(intimacyBalance),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                sliver: SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16,
+                    childAspectRatio: 0.75,
+                  ),
+                  delegate: SliverChildListDelegate([
+                    _buildGridCard(
+                      context,
+                      title: 'Intimacy\nMissions',
+                      subtitle: 'Post for Points',
+                      icon: Icons.favorite,
+                      isPrimary: false,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const CoupleTasksScreen()),
+                      ),
+                      delay: 200,
+                    ),
+                    _buildGridCard(
+                      context,
+                      title: 'Quick\nAction',
+                      subtitle: 'Accept by picture',
+                      icon: Icons.camera_alt,
+                      isPrimary: true,
+                      onTap: () {
+                        // Navigate to camera or quick action
+                      },
+                      delay: 300,
+                    ),
+                    _buildGridCard(
+                      context,
+                      title: 'Weekend\nChallenge',
+                      subtitle: 'Official Tasks',
+                      icon: Icons.weekend,
+                      isPrimary: false,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const OfficialTasksScreen(type: TaskType.weekend)),
+                      ),
+                      delay: 400,
+                    ),
+                    _buildGridCard(
+                      context,
+                      title: 'Bounty\nHunter',
+                      subtitle: 'Special Missions',
+                      icon: Icons.stars,
+                      isPrimary: false,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const OfficialTasksScreen(type: TaskType.bounty)),
+                      ),
+                      delay: 500,
+                    ),
+                  ]),
+                ),
+              ),
+              const SliverPadding(padding: EdgeInsets.only(bottom: 40)),
+            ],
           ),
         ],
       ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final intimacy = context.watch<DataProvider>().intimacy;
-    final history = intimacy?.history ?? [];
-
-    return Scaffold(
-      appBar: AppBar(title: Text(AppLocalizations.of(context)!.intimacyCenter)),
-      body: Column(
+  Widget _build3DGlassCard(int score) {
+    return Transform(
+      transform: Matrix4.identity()
+        ..setEntry(3, 2, 0.001)
+        ..rotateX(-0.1),
+      alignment: Alignment.center,
+      child: Stack(
+        alignment: Alignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.all(32),
-            decoration: const BoxDecoration(
-              gradient: AppColors.romanticGradient,
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
-            ),
-            child: Column(
-              children: [
-                const Icon(Icons.favorite, size: 64, color: Colors.white),
-                const SizedBox(height: 16),
-                Text(
-                  '${intimacy?.score ?? 0}',
-                  style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+          // Base Shadow/Platform
+          Transform.translate(
+            offset: const Offset(0, 40),
+            child: Container(
+              width: 200,
+              height: 120,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.2),
+                    blurRadius: 30,
+                    spreadRadius: 10,
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  AppLocalizations.of(context)!.currentIntimacy,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Colors.white.withOpacity(0.9),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                if (context.read<AuthProvider>().currentUser?.role == UserRole.chef)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: () => _updateIntimacy(10),
-                        icon: const Icon(Icons.add),
-                        label: Text(AppLocalizations.of(context)!.add10),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: AppColors.primary,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      ElevatedButton.icon(
-                        onPressed: () => _updateIntimacy(-5),
-                        icon: const Icon(Icons.remove),
-                        label: Text(AppLocalizations.of(context)!.reduce5),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: AppColors.error,
-                        ),
-                      ),
-                    ],
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(AppConstants.defaultPadding),
-              itemCount: history.length,
-              itemBuilder: (context, index) {
-                final record = history[index];
-                final isPositive = record.change > 0;
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: isPositive ? AppColors.success.withOpacity(0.1) : AppColors.error.withOpacity(0.1),
-                    child: Icon(
-                      isPositive ? Icons.arrow_upward : Icons.arrow_downward,
-                      color: isPositive ? AppColors.success : AppColors.error,
-                      size: 20,
+          // Glass Card
+          ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                width: 240,
+                height: 140,
+                decoration: BoxDecoration(
+                  gradient: AppColors.glassGradient,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: AppColors.glassBorder, width: 1.5),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Intimacy Point',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
-                  title: Text(record.reason),
-                  subtitle: Text(DateFormat('MMM d, h:mm a').format(record.timestamp)),
-                  trailing: Text(
-                    '${isPositive ? '+' : ''}${record.change}',
-                    style: TextStyle(
-                      color: isPositive ? AppColors.success : AppColors.error,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          '\$$score',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 48,
+                            fontWeight: FontWeight.bold,
+                            shadows: [Shadow(color: Colors.black26, blurRadius: 10)],
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '.00',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.7),
+                            fontSize: 20,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                );
-              },
+                  ],
+                ),
+              ),
             ),
           ),
         ],
       ),
+    ).animate(onPlay: (controller) => controller.repeat(reverse: true))
+     .moveY(begin: 0, end: -10, duration: 3.seconds, curve: Curves.easeInOut);
+  }
+
+  Widget _buildGridCard(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required bool isPrimary,
+    required VoidCallback onTap,
+    required int delay,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isPrimary ? null : AppColors.cardSurface,
+        gradient: isPrimary ? AppColors.peachGradient : null,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(24),
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: isPrimary ? Colors.white.withOpacity(0.2) : Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        icon,
+                        color: isPrimary ? Colors.white : Colors.black87,
+                        size: 24,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: isPrimary ? Colors.white : Colors.black87,
+                        height: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isPrimary ? Colors.white.withOpacity(0.8) : Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isPrimary ? Colors.white : Colors.grey[200],
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Open',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: isPrimary ? AppColors.accent : Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.keyboard_arrow_down,
+                            size: 14,
+                            color: isPrimary ? AppColors.accent : Colors.black87,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Decorative Circle
+              Positioned(
+                right: -20,
+                top: 40,
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        (isPrimary ? Colors.white : Colors.grey).withOpacity(0.1),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ).animate().fadeIn(delay: delay.ms).scale(begin: const Offset(0.9, 0.9));
+  }
+
+  Widget _buildFloatingIcon(IconData icon, Color color, double left, double top, double duration) {
+    return Positioned(
+      left: left,
+      top: top,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+          border: Border.all(color: Colors.white, width: 2),
+        ),
+        child: Icon(icon, color: color, size: 24),
+      ).animate(onPlay: (controller) => controller.repeat(reverse: true))
+       .moveY(begin: 0, end: -20, duration: duration.seconds, curve: Curves.easeInOut),
     );
   }
 }

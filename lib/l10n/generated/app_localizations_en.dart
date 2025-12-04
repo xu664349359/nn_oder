@@ -259,4 +259,84 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recipeNotFound => 'Recipe not found';
+
+  @override
+  String get intimacyBalance => 'Intimacy Balance';
+
+  @override
+  String get addToCart => 'Add to Cart';
+
+  @override
+  String get shoppingCart => 'Shopping Cart';
+
+  @override
+  String get washDishes => 'Wash Dishes';
+
+  @override
+  String get dishWashingDiscount => 'Dish Washing Discount (-20%)';
+
+  @override
+  String get quantity => 'Quantity';
+
+  @override
+  String get subtotal => 'Subtotal';
+
+  @override
+  String get discount => 'Discount';
+
+  @override
+  String get total => 'Total';
+
+  @override
+  String get checkout => 'Checkout';
+
+  @override
+  String get insufficientBalance => 'Insufficient intimacy balance';
+
+  @override
+  String get cartEmpty => 'Your cart is empty';
+
+  @override
+  String get checkoutSuccess => 'Order placed successfully!';
+
+  @override
+  String itemsInCart(int count) {
+    return '$count items';
+  }
+
+  @override
+  String get createTask => 'Create Task';
+
+  @override
+  String get taskTitle => 'Task Title';
+
+  @override
+  String get taskDescription => 'Task Description';
+
+  @override
+  String get rewardPoints => 'Reward Points';
+
+  @override
+  String get create => 'Create';
+
+  @override
+  String get coupleTasks => 'Couple Tasks';
+
+  @override
+  String get taskMarket => 'Task Market';
+
+  @override
+  String get myTasks => 'My Tasks';
+
+  @override
+  String get newTask => 'New Task';
+
+  @override
+  String get noCoupleFound => 'No couple connection found';
+
+  @override
+  String get noTasksYet => 'No tasks available yet';
+
+  @override
+  String get noActiveTasks => 'No active tasks';
 }

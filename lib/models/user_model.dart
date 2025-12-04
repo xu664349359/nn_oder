@@ -11,6 +11,7 @@ class User {
   final String? invitationCode;
   final String phoneNumber;
   final String password;
+  final int intimacyBalance;
 
   User({
     required this.id,
@@ -22,6 +23,7 @@ class User {
     this.invitationCode,
     required this.phoneNumber,
     required this.password,
+    this.intimacyBalance = 1000,
   });
 
   Map<String, dynamic> toJson() {
@@ -35,6 +37,7 @@ class User {
       'invitationCode': invitationCode,
       'phoneNumber': phoneNumber,
       'password': password,
+      'intimacy_balance': intimacyBalance,
     };
   }
 
@@ -49,6 +52,7 @@ class User {
       invitationCode: json['invitationCode'],
       phoneNumber: json['phoneNumber'] ?? '',
       password: json['password'] ?? '',
+      intimacyBalance: json['intimacy_balance'] ?? 1000,
     );
   }
   
@@ -62,6 +66,7 @@ class User {
     String? invitationCode,
     String? phoneNumber,
     String? password,
+    int? intimacyBalance,
   }) {
     return User(
       id: id ?? this.id,
@@ -73,6 +78,7 @@ class User {
       invitationCode: invitationCode ?? this.invitationCode,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       password: password ?? this.password,
+      intimacyBalance: intimacyBalance ?? this.intimacyBalance,
     );
   }
 }

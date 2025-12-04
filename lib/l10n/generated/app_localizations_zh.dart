@@ -259,4 +259,84 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get recipeNotFound => '未找到食谱';
+
+  @override
+  String get intimacyBalance => '亲密值余额';
+
+  @override
+  String get addToCart => '加入购物车';
+
+  @override
+  String get shoppingCart => '购物车';
+
+  @override
+  String get washDishes => '洗漱餐具';
+
+  @override
+  String get dishWashingDiscount => '洗碗折扣 (-20%)';
+
+  @override
+  String get quantity => '数量';
+
+  @override
+  String get subtotal => '小计';
+
+  @override
+  String get discount => '折扣';
+
+  @override
+  String get total => '总计';
+
+  @override
+  String get checkout => '结算';
+
+  @override
+  String get insufficientBalance => '亲密值余额不足';
+
+  @override
+  String get cartEmpty => '购物车是空的';
+
+  @override
+  String get checkoutSuccess => '下单成功！';
+
+  @override
+  String itemsInCart(int count) {
+    return '$count 件商品';
+  }
+
+  @override
+  String get createTask => '创建任务';
+
+  @override
+  String get taskTitle => '任务标题';
+
+  @override
+  String get taskDescription => '任务描述';
+
+  @override
+  String get rewardPoints => '奖励积分';
+
+  @override
+  String get create => '创建';
+
+  @override
+  String get coupleTasks => '情侣任务';
+
+  @override
+  String get taskMarket => '任务市场';
+
+  @override
+  String get myTasks => '我的任务';
+
+  @override
+  String get newTask => '新任务';
+
+  @override
+  String get noCoupleFound => '未找到伴侣连接';
+
+  @override
+  String get noTasksYet => '暂无可用任务';
+
+  @override
+  String get noActiveTasks => '暂无进行中的任务';
 }

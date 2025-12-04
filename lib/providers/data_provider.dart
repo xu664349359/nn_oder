@@ -55,14 +55,31 @@ class DataProvider extends ChangeNotifier {
     _setLoading(false);
   }
 
+  int _intimacyBalance = 0;
+  int get intimacyBalance => _intimacyBalance;
+
   Future<void> loadCoupleData() async {
     if (_currentCoupleId == null) return;
     _setLoading(true);
     await Future.wait([
       fetchOrders(),
       fetchIntimacy(),
+      fetchIntimacyBalance(),
     ]);
     _setLoading(false);
+  }
+
+  Future<void> fetchIntimacyBalance() async {
+    if (_currentUserId == null) return;
+    debugPrint('DataProvider: Fetching intimacy balance for user: $_currentUserId');
+    try {
+      _intimacyBalance = await _supabaseService.getIntimacyBalance(_currentUserId!);
+      debugPrint('DataProvider: Fetched intimacy balance: $_intimacyBalance');
+    } catch (e) {
+      debugPrint('DataProvider: Error fetching intimacy balance: $e');
+      _intimacyBalance = 0;
+    }
+    notifyListeners();
   }
 
   Future<void> fetchMenu() async {

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'core/theme.dart';
 import 'providers/auth_provider.dart';
 import 'providers/data_provider.dart';
+import 'providers/cart_provider.dart';
 import 'router.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -66,6 +67,7 @@ class _MyAppState extends State<MyApp> {
                 return data!;
               },
             ),
+            ChangeNotifierProvider(create: (_) => CartProvider()),
           ],
           child: Consumer2<AuthProvider, LocaleProvider>(
             builder: (context, authProvider, localeProvider, _) {

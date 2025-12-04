@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/intimacy_task_model.dart';
 
 class SupabaseService {
   static final SupabaseService _instance = SupabaseService._internal();
@@ -340,5 +341,223 @@ class SupabaseService {
         'step_number': i + 1,
       }).eq('id', stepIds[i]);
     }
+  }
+  // --- Cart & Balance ---
+
+  Future<List<Map<String, dynamic>>> getCartItems(String userId) async {
+    try {
+      final data = await _client
+          .from('shopping_cart')
+          .select('*, menu(*)')
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
+      return List<Map<String, dynamic>>.from(data);
+    } catch (e) {
+      debugPrint('SupabaseService: Error fetching cart items: $e');
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>> addToCart(String userId, String menuItemId, {int quantity = 1, bool washDishes = false}) async {
+    try {
+      // Check if item already exists in cart
+      final existing = await _client
+          .from('shopping_cart')
+          .select()
+          .eq('user_id', userId)
+          .eq('menu_item_id', menuItemId)
+          .maybeSingle();
+
+      if (existing != null) {
+        // Update quantity
+        final newQuantity = (existing['quantity'] as int) + quantity;
+        final result = await _client
+            .from('shopping_cart')
+            .update({'quantity': newQuantity, 'updated_at': DateTime.now().toIso8601String()})
+            .eq('id', existing['id'])
+            .select('*, menu(*)')
+            .single();
+        return result;
+      } else {
+        // Insert new item
+        final result = await _client
+            .from('shopping_cart')
+            .insert({
+              'user_id': userId,
+              'menu_item_id': menuItemId,
+              'quantity': quantity,
+              'wash_dishes': washDishes,
+            })
+            .select('*, menu(*)')
+            .single();
+        return result;
+      }
+    } catch (e) {
+      debugPrint('SupabaseService: Error adding to cart: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> updateCartItem(String cartItemId, {int? quantity, bool? washDishes}) async {
+    try {
+      final updates = <String, dynamic>{
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+      if (quantity != null) updates['quantity'] = quantity;
+      if (washDishes != null) updates['wash_dishes'] = washDishes;
+
+      await _client
+          .from('shopping_cart')
+          .update(updates)
+          .eq('id', cartItemId);
+    } catch (e) {
+      debugPrint('SupabaseService: Error updating cart item: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> removeFromCart(String cartItemId) async {
+    await _client.from('shopping_cart').delete().eq('id', cartItemId);
+  }
+
+  Future<void> clearCart(String userId) async {
+    await _client.from('shopping_cart').delete().eq('user_id', userId);
+  }
+
+  Future<int> getIntimacyBalance(String userId) async {
+    try {
+      final data = await _client
+          .from('profiles')
+          .select('intimacy_balance')
+          .eq('id', userId)
+          .single();
+      return data['intimacy_balance'] as int;
+    } catch (e) {
+      debugPrint('SupabaseService: Error fetching balance: $e');
+      return 0;
+    }
+  }
+
+  Future<void> updateIntimacyBalance(String userId, int newBalance) async {
+    await _client
+        .from('profiles')
+        .update({'intimacy_balance': newBalance})
+        .eq('id', userId);
+  }
+
+  Future<void> checkout(String userId, List<Map<String, dynamic>> cartItems, int totalCost, String coupleId) async {
+    // Transaction-like logic (Supabase doesn't support multi-table transactions in client directly easily without RPC, 
+    // but we'll do sequential operations with error handling)
+    
+    try {
+      // 1. Check balance again
+      final currentBalance = await getIntimacyBalance(userId);
+      if (currentBalance < totalCost) {
+        throw Exception('Insufficient balance');
+      }
+
+      // 2. Deduct balance
+      await updateIntimacyBalance(userId, currentBalance - totalCost);
+
+      // 3. Create orders
+      for (final item in cartItems) {
+        final menuItem = item['menu'];
+        final quantity = item['quantity'] as int;
+        final washDishes = item['wash_dishes'] as bool;
+        final basePrice = (menuItem['intimacy_price'] as int) * quantity;
+        final discount = washDishes ? (basePrice * 0.2).round() : 0;
+        final finalPrice = basePrice - discount;
+
+        await createOrder({
+          'couple_id': coupleId,
+          'user_id': userId, // Who placed the order
+          'menu_item_id': item['menu_item_id'],
+          'quantity': quantity,
+          'status': 'pending',
+          'wash_dishes': washDishes,
+          'original_intimacy_cost': basePrice,
+          'actual_intimacy_cost': finalPrice,
+          'discount_amount': discount,
+        });
+      }
+
+      // 4. Clear cart
+      await clearCart(userId);
+      
+    } catch (e) {
+      debugPrint('SupabaseService: Checkout failed: $e');
+      rethrow;
+    }
+  }
+  // --- Intimacy Tasks ---
+
+  Future<void> createIntimacyTask(IntimacyTask task) async {
+    await _client.from('intimacy_tasks').insert(task.toJson());
+  }
+
+  Future<List<IntimacyTask>> getIntimacyTasks({String? coupleId, TaskType? type}) async {
+    var query = _client.from('intimacy_tasks').select();
+    
+    if (coupleId != null) {
+      query = query.eq('couple_id', coupleId);
+    }
+    
+    if (type != null) {
+      query = query.eq('type', type.name);
+    }
+    
+    final data = await query.order('created_at', ascending: false);
+    return (data as List).map((e) => IntimacyTask.fromJson(e)).toList();
+  }
+
+  Future<void> claimTask(String taskId, String userId) async {
+    await _client.from('task_executions').insert({
+      'task_id': taskId,
+      'user_id': userId,
+      'status': 'claimed',
+    });
+  }
+
+  Future<List<TaskExecution>> getTaskExecutions(String userId) async {
+    final data = await _client
+        .from('task_executions')
+        .select('*, intimacy_tasks(*)')
+        .eq('user_id', userId)
+        .order('created_at', ascending: false);
+    return (data as List).map((e) => TaskExecution.fromJson(e)).toList();
+  }
+
+  Future<String> uploadTaskProof(String filePath, String executionId) async {
+    final file = File(filePath);
+    final bytes = await file.readAsBytes();
+    final fileExt = filePath.split('.').last;
+    final fileName = 'proof_$executionId.$fileExt';
+    
+    await _client.storage.from('task-proofs').uploadBinary(
+      fileName,
+      bytes,
+      fileOptions: const FileOptions(upsert: true),
+    );
+    
+    return _client.storage.from('task-proofs').getPublicUrl(fileName);
+  }
+
+  Future<void> submitTaskProof(String executionId, String proofUrl) async {
+    await _client.from('task_executions').update({
+      'status': 'submitted',
+      'proof_image_url': proofUrl,
+    }).eq('id', executionId);
+  }
+
+  Future<void> approveTask(String executionId, String userId, int rewardPoints) async {
+    // 1. Update execution status
+    await _client.from('task_executions').update({
+      'status': 'approved',
+      'completed_at': DateTime.now().toIso8601String(),
+    }).eq('id', executionId);
+
+    // 2. Add points to user
+    final currentBalance = await getIntimacyBalance(userId);
+    await updateIntimacyBalance(userId, currentBalance + rewardPoints);
   }
 }

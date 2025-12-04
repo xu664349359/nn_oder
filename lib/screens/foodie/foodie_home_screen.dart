@@ -5,10 +5,10 @@ import 'package:provider/provider.dart';
 import '../../core/constants.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/data_provider.dart';
+import '../../providers/cart_provider.dart';
 import '../../widgets/menu_card.dart';
 import 'order_history_screen.dart';
 import '../chef/intimacy_management_screen.dart';
-import '../moments/moments_screen.dart';
 import '../moments/moments_screen.dart';
 import '../profile/profile_screen.dart';
 import '../../widgets/modern_bottom_navigation.dart';
@@ -28,6 +28,11 @@ class _FoodieHomeScreenState extends State<FoodieHomeScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DataProvider>().loadInitialData();
+      final user = context.read<AuthProvider>().currentUser;
+      if (user != null) {
+        context.read<CartProvider>().loadCart(user.id);
+        context.read<AuthProvider>().refreshBalance();
+      }
     });
   }
 
@@ -70,8 +75,8 @@ class _FoodieHomeContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().currentUser;
     final dataProvider = context.watch<DataProvider>();
+    final cartProvider = context.watch<CartProvider>();
     final menuItems = dataProvider.menuItems;
-    final intimacy = dataProvider.intimacy;
     final l10n = AppLocalizations.of(context)!;
 
     // Simple recommendation logic: just pick the first one or random
@@ -83,7 +88,7 @@ class _FoodieHomeContent extends StatelessWidget {
           children: [
             Text('Hi, ${user?.nickname ?? l10n.foodie}'),
             Text(
-              '${l10n.intimacy}: ${intimacy?.score ?? 0} ❤️',
+              '${l10n.intimacyBalance}: ${user?.intimacyBalance ?? 0} ❤️',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: AppColors.accent,
                 fontWeight: FontWeight.bold,
@@ -91,10 +96,49 @@ class _FoodieHomeContent extends StatelessWidget {
             ),
           ],
         ),
+        actions: [
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.shopping_cart),
+                onPressed: () => context.push('/foodie/cart'),
+              ),
+              if (cartProvider.itemCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      '${cartProvider.itemCount}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
           await context.read<DataProvider>().fetchMenu();
+          if (user != null) {
+            await context.read<AuthProvider>().refreshBalance();
+          }
         },
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppConstants.defaultPadding),
@@ -158,6 +202,7 @@ class _FoodieHomeContent extends StatelessWidget {
                   );
                 },
               ),
+              const SizedBox(height: 80), // Space for bottom bar
             ],
           ),
         ),
