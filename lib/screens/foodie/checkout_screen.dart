@@ -6,6 +6,7 @@ import 'package:nn_oder/l10n/generated/app_localizations.dart';
 import '../../core/constants.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
+import '../../services/supabase_service.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -25,7 +26,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     setState(() => _isProcessing = true);
 
     try {
-      await context.read<CartProvider>().checkout(user.id, user.partnerId!);
+      // Fetch the valid couple_id from the couples table
+      final coupleData = await SupabaseService().getCouple(user.id);
+      if (coupleData == null) {
+        throw Exception('Couple data not found');
+      }
+      final validCoupleId = coupleData['id'];
+
+      await context.read<CartProvider>().checkout(user.id, validCoupleId);
       
       // Refresh balance after checkout
       await context.read<AuthProvider>().refreshBalance();
@@ -41,7 +49,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         
         if (mounted) {
           // Go back to home
-          context.go('/foodie');
+          context.go('/foodie/home');
         }
       }
     } catch (e) {
@@ -62,14 +70,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.check_circle, color: Colors.green, size: 100)
+              const Icon(Icons.favorite, color: AppColors.primary, size: 100)
                   .animate()
                   .scale(duration: 600.ms, curve: Curves.elasticOut),
               const SizedBox(height: 24),
               Text(
-                AppLocalizations.of(context)!.checkoutSuccess,
+                'Order Sent with Love!',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.green,
+                  color: AppColors.primary,
                   fontWeight: FontWeight.bold,
                 ),
               ).animate().fadeIn(delay: 300.ms),
@@ -78,6 +86,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ),
       );
     }
+
 
     final l10n = AppLocalizations.of(context)!;
     final cartProvider = context.watch<CartProvider>();
@@ -278,4 +287,5 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       ),
     );
   }
+
 }

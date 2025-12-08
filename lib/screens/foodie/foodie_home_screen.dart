@@ -1,7 +1,10 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:nn_oder/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import '../../core/constants.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/data_provider.dart';
@@ -68,8 +71,16 @@ class _FoodieHomeScreenState extends State<FoodieHomeScreen> {
   }
 }
 
-class _FoodieHomeContent extends StatelessWidget {
+class _FoodieHomeContent extends StatefulWidget {
   const _FoodieHomeContent();
+
+  @override
+  State<_FoodieHomeContent> createState() => _FoodieHomeContentState();
+}
+
+class _FoodieHomeContentState extends State<_FoodieHomeContent> {
+  int _selectedCategoryIndex = 0;
+  final List<String> _categories = ['All', 'Meat', 'Veggie', 'Soup', 'Dessert', 'Drinks']; // Mock categories
 
   @override
   Widget build(BuildContext context) {
@@ -79,134 +90,240 @@ class _FoodieHomeContent extends StatelessWidget {
     final menuItems = dataProvider.menuItems;
     final l10n = AppLocalizations.of(context)!;
 
-    // Simple recommendation logic: just pick the first one or random
-    final recommendedItem = menuItems.isNotEmpty ? menuItems.first : null;
-
     return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          children: [
-            Text('Hi, ${user?.nickname ?? l10n.foodie}'),
-            Text(
-              '${l10n.intimacyBalance}: ${user?.intimacyBalance ?? 0} ❤️',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.accent,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.shopping_cart),
-                onPressed: () => context.push('/foodie/cart'),
-              ),
-              if (cartProvider.itemCount > 0)
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    constraints: const BoxConstraints(
-                      minWidth: 16,
-                      minHeight: 16,
-                    ),
-                    child: Text(
-                      '${cartProvider.itemCount}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await context.read<DataProvider>().fetchMenu();
-          if (user != null) {
-            await context.read<AuthProvider>().refreshBalance();
-          }
-        },
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppConstants.defaultPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                l10n.todaysSpecial,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              if (recommendedItem != null)
-                SizedBox(
-                  height: 250,
-                  child: MenuCard(
-                    menuItem: recommendedItem,
-                    onTap: () => context.push('/foodie/menu/detail', extra: recommendedItem),
-                  ),
-                )
-              else
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Center(child: Text(l10n.noDishes)),
-                  ),
-                ),
-              const SizedBox(height: 32),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      backgroundColor: const Color(0xFFFFF8F0), // Warm "Healing" background
+      body: CustomScrollView(
+        slivers: [
+          // 1. Warm Illustration Header (SliverAppBar)
+          SliverAppBar(
+            expandedHeight: 200.0,
+            floating: false,
+            pinned: true,
+            backgroundColor: const Color(0xFFFFF8F0),
+            surfaceTintColor: Colors.transparent,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Stack(
+                fit: StackFit.expand,
                 children: [
-                  Text(
-                    l10n.menu,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+                  // Warm textured background/image
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          const Color(0xFFFFE0B2), // Light Amber
+                          const Color(0xFFFFF8F0),
+                        ],
+                      ),
                     ),
                   ),
-                  TextButton(
-                    onPressed: () => context.push('/foodie/menu'),
-                    child: Text(l10n.seeAll),
+                  // Illustration (Placeholder for now, using Icon/Pattern)
+                  Positioned(
+                    right: -20,
+                    bottom: -20,
+                    child: Icon(
+                      Icons.lunch_dining_rounded,
+                      size: 200,
+                      color: Colors.orange.withOpacity(0.1),
+                    ),
+                  ),
+                  Positioned(
+                    left: 20,
+                    bottom: 40,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Hungry, ${user?.nickname ?? l10n.foodie}?',
+                          style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF5D4037), // Warm brown
+                          ),
+                        ).animate().fadeIn(duration: 600.ms).slideX(),
+                        Text(
+                          l10n.startDeliciousMoments,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: const Color(0xFF5D4037).withOpacity(0.7),
+                          ),
+                        ).animate().fadeIn(delay: 200.ms).slideX(),
+                      ],
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.8,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
+              title: Text(
+                'Love Kitchen',
+                style: TextStyle(
+                  color: const Color(0xFF5D4037).withOpacity(_isCollapsed(context) ? 1.0 : 0.0), // Fade in title on scroll
                 ),
-                itemCount: menuItems.length > 4 ? 4 : menuItems.length,
+              ),
+              centerTitle: true,
+            ),
+            actions: [
+               Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.shopping_cart_outlined, color: Color(0xFF5D4037)),
+                    onPressed: () => context.push('/foodie/cart'),
+                  ),
+                  if (cartProvider.itemCount > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.redAccent,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Text(
+                          '${cartProvider.itemCount}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ).animate().scale(duration: 300.ms, curve: Curves.elasticOut),
+                    ),
+                ],
+              ),
+              const SizedBox(width: 8),
+            ],
+          ),
+
+          // 2. Category Navigation Bar (Sticky)
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _SliverCategoryHeaderDelegate(
+              categories: _categories,
+              selectedIndex: _selectedCategoryIndex,
+              onCategorySelected: (index) {
+                setState(() => _selectedCategoryIndex = index);
+                // In real app, filter menuItems here
+              },
+            ),
+          ),
+
+          // 3. Card-Style Dish Stream (Masonry/Staggered Grid)
+          if (menuItems.isEmpty)
+            SliverFillRemaining(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.ramen_dining, size: 80, color: Colors.grey[300]),
+                    const SizedBox(height: 16),
+                    Text(l10n.noDishes, style: TextStyle(color: Colors.grey[400])),
+                  ],
+                ),
+              ),
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+              sliver: SliverMasonryGrid.count(
+                crossAxisCount: 2,
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+                childCount: menuItems.length,
                 itemBuilder: (context, index) {
                   return MenuCard(
                     menuItem: menuItems[index],
                     onTap: () => context.push('/foodie/menu/detail', extra: menuItems[index]),
-                  );
+                  )
+                  .animate()
+                  .fadeIn(duration: 600.ms, delay: (index * 100).ms)
+                  .slideY(begin: 0.2, end: 0, curve: Curves.easeOutBack) // "Pop" slide
+                  .scale(begin: const Offset(0.9, 0.9), end: const Offset(1, 1), curve: Curves.easeOutBack); // subtle scale bounce
                 },
               ),
-              const SizedBox(height: 80), // Space for bottom bar
-            ],
-          ),
-        ),
+            ),
+            
+             const SliverToBoxAdapter(child: SizedBox(height: 100)), // Bottom padding
+        ],
       ),
     );
+  }
+
+  bool _isCollapsed(BuildContext context) {
+    // Helper to detect if app bar is collapsed (roughly) based on scroll offset or just use visibility
+    // Since we can't easily access scroll offset here without a controller, relying on Opacity logic in widget tree or strictly style choice.
+    // simpler: Always show title if collapsed, but FlexibleSpaceBar handles title opacity automatically if set in title. 
+    // Actually FlexibleSpaceBar title is typically always visible or fades out background. 
+    // To fade IN title on collapse, we'd need a ScrollController. For simplicity, just letting standard behavior work or always show.
+    return false; 
+  }
+}
+
+class _SliverCategoryHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final List<String> categories;
+  final int selectedIndex;
+  final ValueChanged<int> onCategorySelected;
+
+  _SliverCategoryHeaderDelegate({
+    required this.categories,
+    required this.selectedIndex,
+    required this.onCategorySelected,
+  });
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      height: maxExtent,
+      color: const Color(0xFFFFF8F0), // Match background
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        scrollDirection: Axis.horizontal,
+        itemCount: categories.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 12),
+        itemBuilder: (context, index) {
+          final isSelected = index == selectedIndex;
+          return GestureDetector(
+            onTap: () => onCategorySelected(index),
+            child: AnimatedContainer(
+              duration: 300.ms,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              decoration: BoxDecoration(
+                color: isSelected ? const Color(0xFFFFB74D) : Colors.white, // Orange vs White
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: isSelected 
+                  ? [BoxShadow(color: const Color(0xFFFFB74D).withOpacity(0.4), blurRadius: 8, offset: const Offset(0, 4))]
+                  : [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))],
+              ),
+              child: Center(
+                child: Text(
+                  categories[index],
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : const Color(0xFF5D4037),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  @override
+  double get maxExtent => 74.0; 
+
+  @override
+  double get minExtent => 74.0;
+
+  @override
+  bool shouldRebuild(covariant _SliverCategoryHeaderDelegate oldDelegate) {
+    return selectedIndex != oldDelegate.selectedIndex;
   }
 }

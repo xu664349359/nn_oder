@@ -116,5 +116,15 @@
   "newTask": "新任务",
   "noCoupleFound": "未找到伴侣连接",
   "noTasksYet": "暂无可用任务",
-  "noActiveTasks": "暂无进行中的任务"
+  "noActiveTasks": "暂无进行中的任务",
+  "intimacyMissions": "亲密\n任务",
+  "postForPoints": "发帖赚积分",
+  "quickAction": "快速\n行动",
+  "acceptByPicture": "拍照接单",
+  "weekendChallenge": "周末\n挑战",
+  "officialTasks": "官方任务",
+  "bountyHunter": "赏金\n猎人",
+  "specialMissions": "特殊任务",
+  "open": "打开",
+  "intimacyPoint": "亲密分"
 }

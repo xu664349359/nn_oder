@@ -339,4 +339,34 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get noActiveTasks => '暂无进行中的任务';
+
+  @override
+  String get intimacyMissions => '亲密\n任务';
+
+  @override
+  String get postForPoints => '发帖赚积分';
+
+  @override
+  String get quickAction => '快速\n行动';
+
+  @override
+  String get acceptByPicture => '拍照接单';
+
+  @override
+  String get weekendChallenge => '周末\n挑战';
+
+  @override
+  String get officialTasks => '官方任务';
+
+  @override
+  String get bountyHunter => '赏金\n猎人';
+
+  @override
+  String get specialMissions => '特殊任务';
+
+  @override
+  String get open => '打开';
+
+  @override
+  String get intimacyPoint => '亲密分';
 }

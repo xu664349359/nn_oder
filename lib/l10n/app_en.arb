@@ -116,5 +116,15 @@
   "newTask": "New Task",
   "noCoupleFound": "No couple connection found",
   "noTasksYet": "No tasks available yet",
-  "noActiveTasks": "No active tasks"
+  "noActiveTasks": "No active tasks",
+  "intimacyMissions": "Intimacy\nMissions",
+  "postForPoints": "Post for Points",
+  "quickAction": "Quick\nAction",
+  "acceptByPicture": "Accept by picture",
+  "weekendChallenge": "Weekend\nChallenge",
+  "officialTasks": "Official Tasks",
+  "bountyHunter": "Bounty\nHunter",
+  "specialMissions": "Special Missions",
+  "open": "Open",
+  "intimacyPoint": "Intimacy Point"
 }

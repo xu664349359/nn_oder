@@ -757,6 +757,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No active tasks'**
   String get noActiveTasks;
+
+  /// No description provided for @intimacyMissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Intimacy\nMissions'**
+  String get intimacyMissions;
+
+  /// No description provided for @postForPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Post for Points'**
+  String get postForPoints;
+
+  /// No description provided for @quickAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick\nAction'**
+  String get quickAction;
+
+  /// No description provided for @acceptByPicture.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept by picture'**
+  String get acceptByPicture;
+
+  /// No description provided for @weekendChallenge.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekend\nChallenge'**
+  String get weekendChallenge;
+
+  /// No description provided for @officialTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Official Tasks'**
+  String get officialTasks;
+
+  /// No description provided for @bountyHunter.
+  ///
+  /// In en, this message translates to:
+  /// **'Bounty\nHunter'**
+  String get bountyHunter;
+
+  /// No description provided for @specialMissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Special Missions'**
+  String get specialMissions;
+
+  /// No description provided for @open.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get open;
+
+  /// No description provided for @intimacyPoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Intimacy Point'**
+  String get intimacyPoint;
 }
 
 class _AppLocalizationsDelegate

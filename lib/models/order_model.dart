@@ -16,6 +16,7 @@ class Order {
   final int? originalIntimacyCost;
   final int? actualIntimacyCost;
   final int? discountAmount;
+  final int quantity;
 
   Order({
     required this.id,
@@ -32,6 +33,7 @@ class Order {
     this.originalIntimacyCost,
     this.actualIntimacyCost,
     this.discountAmount,
+    this.quantity = 1,
   });
   
   Order copyWith({
@@ -49,6 +51,7 @@ class Order {
     int? originalIntimacyCost,
     int? actualIntimacyCost,
     int? discountAmount,
+    int? quantity,
   }) {
     return Order(
       id: id ?? this.id,
@@ -65,6 +68,7 @@ class Order {
       originalIntimacyCost: originalIntimacyCost ?? this.originalIntimacyCost,
       actualIntimacyCost: actualIntimacyCost ?? this.actualIntimacyCost,
       discountAmount: discountAmount ?? this.discountAmount,
+      quantity: quantity ?? this.quantity,
     );
   }
 
@@ -80,13 +84,14 @@ class Order {
         (e) => e.name == json['status'],
         orElse: () => OrderStatus.pending,
       ),
-      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
+      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()).toLocal(),
       rating: json['rating'],
       reviewComment: json['review_comment'],
       washDishes: json['wash_dishes'] ?? false,
       originalIntimacyCost: json['original_intimacy_cost'],
       actualIntimacyCost: json['actual_intimacy_cost'],
       discountAmount: json['discount_amount'],
+      quantity: json['quantity'] ?? 1,
     );
   }
 

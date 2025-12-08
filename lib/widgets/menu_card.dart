@@ -23,7 +23,8 @@ class MenuCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
+            AspectRatio(
+              aspectRatio: 1.1, // Slightly landscape/square ratio
               child: _buildImage(),
             ),
             Padding(

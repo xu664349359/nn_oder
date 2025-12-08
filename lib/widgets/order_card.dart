@@ -91,7 +91,7 @@ class OrderCard extends StatelessWidget {
                         children: [
                           Expanded(
                             child: Text(
-                              order.menuItemName,
+                              '${order.quantity}x ${order.menuItemName}',
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,

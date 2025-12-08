@@ -339,4 +339,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noActiveTasks => 'No active tasks';
+
+  @override
+  String get intimacyMissions => 'Intimacy\nMissions';
+
+  @override
+  String get postForPoints => 'Post for Points';
+
+  @override
+  String get quickAction => 'Quick\nAction';
+
+  @override
+  String get acceptByPicture => 'Accept by picture';
+
+  @override
+  String get weekendChallenge => 'Weekend\nChallenge';
+
+  @override
+  String get officialTasks => 'Official Tasks';
+
+  @override
+  String get bountyHunter => 'Bounty\nHunter';
+
+  @override
+  String get specialMissions => 'Special Missions';
+
+  @override
+  String get open => 'Open';
+
+  @override
+  String get intimacyPoint => 'Intimacy Point';
 }

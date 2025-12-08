@@ -21,6 +21,7 @@ class _IntimacyManagementScreenState extends State<IntimacyManagementScreen> {
   @override
   Widget build(BuildContext context) {
     final intimacyBalance = context.watch<DataProvider>().intimacyBalance;
+    final l10n = AppLocalizations.of(context)!;
     
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
@@ -64,16 +65,16 @@ class _IntimacyManagementScreenState extends State<IntimacyManagementScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const SizedBox(height: 20),
-                        const Text(
-                          'Intimacy Center',
-                          style: TextStyle(
+                        Text(
+                          l10n.intimacyCenter,
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                           ),
                         ).animate().fadeIn().slideY(begin: -0.5, end: 0),
                         const SizedBox(height: 30),
-                        _build3DGlassCard(intimacyBalance),
+                        _build3DGlassCard(intimacyBalance, l10n),
                       ],
                     ),
                   ),
@@ -91,31 +92,36 @@ class _IntimacyManagementScreenState extends State<IntimacyManagementScreen> {
                   delegate: SliverChildListDelegate([
                     _buildGridCard(
                       context,
-                      title: 'Intimacy\nMissions',
-                      subtitle: 'Post for Points',
+                      title: l10n.intimacyMissions,
+                      subtitle: l10n.postForPoints,
                       icon: Icons.favorite,
                       isPrimary: false,
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(builder: (_) => const CoupleTasksScreen()),
                       ),
+
                       delay: 200,
+                      l10n: l10n,
+                      backgroundImage: 'assets/images/intimacy_card_bg.png',
                     ),
                     _buildGridCard(
                       context,
-                      title: 'Quick\nAction',
-                      subtitle: 'Accept by picture',
+                      title: l10n.quickAction,
+                      subtitle: l10n.acceptByPicture,
                       icon: Icons.camera_alt,
                       isPrimary: true,
                       onTap: () {
                         // Navigate to camera or quick action
                       },
                       delay: 300,
+                      l10n: l10n,
+                      backgroundImage: 'assets/images/intimacy_card_bg.png',
                     ),
                     _buildGridCard(
                       context,
-                      title: 'Weekend\nChallenge',
-                      subtitle: 'Official Tasks',
+                      title: l10n.weekendChallenge,
+                      subtitle: l10n.officialTasks,
                       icon: Icons.weekend,
                       isPrimary: false,
                       onTap: () => Navigator.push(
@@ -123,11 +129,13 @@ class _IntimacyManagementScreenState extends State<IntimacyManagementScreen> {
                         MaterialPageRoute(builder: (_) => const OfficialTasksScreen(type: TaskType.weekend)),
                       ),
                       delay: 400,
+                      l10n: l10n,
+                      backgroundImage: 'assets/images/intimacy_card_bg.png',
                     ),
                     _buildGridCard(
                       context,
-                      title: 'Bounty\nHunter',
-                      subtitle: 'Special Missions',
+                      title: l10n.bountyHunter,
+                      subtitle: l10n.specialMissions,
                       icon: Icons.stars,
                       isPrimary: false,
                       onTap: () => Navigator.push(
@@ -135,6 +143,8 @@ class _IntimacyManagementScreenState extends State<IntimacyManagementScreen> {
                         MaterialPageRoute(builder: (_) => const OfficialTasksScreen(type: TaskType.bounty)),
                       ),
                       delay: 500,
+                      l10n: l10n,
+                      backgroundImage: 'assets/images/intimacy_card_bg.png',
                     ),
                   ]),
                 ),
@@ -147,7 +157,7 @@ class _IntimacyManagementScreenState extends State<IntimacyManagementScreen> {
     );
   }
 
-  Widget _build3DGlassCard(int score) {
+  Widget _build3DGlassCard(int score, AppLocalizations l10n) {
     return Transform(
       transform: Matrix4.identity()
         ..setEntry(3, 2, 0.001)
@@ -192,7 +202,7 @@ class _IntimacyManagementScreenState extends State<IntimacyManagementScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Intimacy Point',
+                      l10n.intimacyPoint,
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.9),
                         fontSize: 16,
@@ -244,6 +254,8 @@ class _IntimacyManagementScreenState extends State<IntimacyManagementScreen> {
     required bool isPrimary,
     required VoidCallback onTap,
     required int delay,
+    required AppLocalizations l10n,
+    String? backgroundImage,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -265,6 +277,21 @@ class _IntimacyManagementScreenState extends State<IntimacyManagementScreen> {
           borderRadius: BorderRadius.circular(24),
           child: Stack(
             children: [
+               if (backgroundImage != null)
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Opacity(
+                    opacity: 0.5,
+                    child: Image.asset(
+                      backgroundImage,
+                      width: 150,
+                      height: 150,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_,__,___) => const SizedBox(),
+                    ),
+                  ),
+                ),
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -307,29 +334,44 @@ class _IntimacyManagementScreenState extends State<IntimacyManagementScreen> {
                         color: isPrimary ? Colors.white : Colors.grey[200],
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Open',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: isPrimary ? AppColors.accent : Colors.black87,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.keyboard_arrow_down,
-                            size: 14,
-                            color: isPrimary ? AppColors.accent : Colors.black87,
-                          ),
-                        ],
-                      ),
+                      // child: Row(
+                      //   mainAxisSize: MainAxisSize.min,
+                      //   children: [
+                      //     Text(
+                      //       l10n.open,
+                      //       style: TextStyle(
+                      //         fontSize: 12,
+                      //         fontWeight: FontWeight.bold,
+                      //         color: isPrimary ? AppColors.accent : Colors.black87,
+                      //       ),
+                      //     ),
+                      //     const SizedBox(width: 4),
+                      //     Icon(
+                      //       Icons.keyboard_arrow_down,
+                      //       size: 14,
+                      //       color: isPrimary ? AppColors.accent : Colors.black87,
+                      //     ),
+                      //   ],
+                      // ),
                     ),
                   ],
                 ),
               ),
+              if (backgroundImage != null)
+                Positioned(
+                  right: -20,
+                  top: 0,
+                  child: Opacity(
+                    opacity: 0.5,
+                    child: Image.asset(
+                      backgroundImage,
+                      width: 150,
+                      height: 150,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_,__,___) => const SizedBox(),
+                    ),
+                  ),
+                ),
               // Decorative Circle
               Positioned(
                 right: -20,
@@ -352,7 +394,7 @@ class _IntimacyManagementScreenState extends State<IntimacyManagementScreen> {
           ),
         ),
       ),
-    ).animate().fadeIn(delay: delay.ms).scale(begin: const Offset(0.9, 0.9));
+    ).animate().fadeIn(delay: 200.ms).scale(begin: const Offset(0.9, 0.9));
   }
 
   Widget _buildFloatingIcon(IconData icon, Color color, double left, double top, double duration) {
