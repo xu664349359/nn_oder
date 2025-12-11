@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../core/constants.dart';
 
 class ModernBottomNavigation extends StatelessWidget {
@@ -36,6 +37,7 @@ class ModernBottomNavigation extends StatelessWidget {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Row(
+
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: List.generate(items.length, (index) {
                 final isSelected = currentIndex == index;
@@ -55,18 +57,17 @@ class ModernBottomNavigation extends StatelessWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        AnimatedScale(
-                          scale: isSelected ? 1.2 : 1.0,
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeOutBack,
-                          child: IconTheme(
-                            data: IconThemeData(
-                              color: isSelected ? AppColors.primary : Colors.grey[400],
-                              size: 24,
-                            ),
-                            child: item.icon is Icon ? item.icon as Icon : const Icon(Icons.error),
+                        IconTheme(
+                          data: IconThemeData(
+                            color: isSelected ? AppColors.primary : Colors.grey[400],
+                            size: 24,
                           ),
-                        ),
+                          child: item.icon is Icon ? item.icon as Icon : const Icon(Icons.error),
+                        )
+                        .animate(target: isSelected ? 1 : 0)
+                        .scale(begin: const Offset(1, 1), end: const Offset(1, 1)) // Reset scale, no zoom
+                        .shake(hz: 4, curve: Curves.easeInOutCubic, duration: 400.ms), // Add shake effect
+                        
                         if (isSelected) ...[
                           const SizedBox(height: 4),
                           Container(

@@ -397,7 +397,63 @@ class SupabaseService {
       rethrow;
     }
   }
+  // Moments
+  Future<List<Map<String, dynamic>>> getMoments(String coupleId) async {
+    final response = await _client
+        .from('moments')
+        .select('*, profiles:user_id(nickname, avatar_url), moment_likes(user_id)')
+        .eq('couple_id', coupleId)
+        .order('created_at', ascending: false);
+    return List<Map<String, dynamic>>.from(response);
+  }
 
+  Future<void> createMoment(Map<String, dynamic> momentData) async {
+    await _client.from('moments').insert(momentData);
+  }
+
+  Future<void> momentToggleLike(String momentId, String userId) async {
+    // Check if liked
+    final existing = await _client
+        .from('moment_likes')
+        .select()
+        .eq('moment_id', momentId)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+    if (existing != null) {
+      await _client
+          .from('moment_likes')
+          .delete()
+          .eq('moment_id', momentId)
+          .eq('user_id', userId);
+    } else {
+      await _client.from('moment_likes').insert({
+        'moment_id': momentId,
+        'user_id': userId,
+      });
+    }
+  }
+
+  Future<String?> uploadMomentImage(String userId, dynamic imageFile) async {
+    // Determine if imageFile is File (mobile) or Uint8List (web) or XFile
+    // Assuming XFile or File path logic handling in UI, but here we expect bytes or file.
+    // For consistency with existing storage methods:
+    // Simple wrapper that delegates to uploadImage logic if specific bucket logic needed or just reuses existing pattern
+    // Since we don't have a generic uploadImage, we implement it here similar to others
+    if (imageFile is String) {
+        final file = File(imageFile);
+        final bytes = await file.readAsBytes();
+        final fileName = 'moment_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        
+        await _client.storage.from('moments').uploadBinary(
+          fileName,
+          bytes,
+          fileOptions: const FileOptions(upsert: true),
+        );
+        return _client.storage.from('moments').getPublicUrl(fileName);
+    }
+    return null;
+  }
   Future<void> updateCartItem(String cartItemId, {int? quantity, bool? washDishes}) async {
     try {
       final updates = <String, dynamic>{

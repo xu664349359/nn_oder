@@ -279,7 +279,7 @@ class _IntimacyManagementScreenState extends State<IntimacyManagementScreen> {
             children: [
                if (backgroundImage != null)
                 Positioned(
-                  right: 0,
+                  right: -20,
                   bottom: 0,
                   child: Opacity(
                     opacity: 0.5,
@@ -357,21 +357,6 @@ class _IntimacyManagementScreenState extends State<IntimacyManagementScreen> {
                   ],
                 ),
               ),
-              if (backgroundImage != null)
-                Positioned(
-                  right: -20,
-                  top: 0,
-                  child: Opacity(
-                    opacity: 0.5,
-                    child: Image.asset(
-                      backgroundImage,
-                      width: 150,
-                      height: 150,
-                      fit: BoxFit.contain,
-                      errorBuilder: (_,__,___) => const SizedBox(),
-                    ),
-                  ),
-                ),
               // Decorative Circle
               Positioned(
                 right: -20,

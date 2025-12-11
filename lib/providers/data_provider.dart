@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../models/menu_model.dart';
 import '../models/order_model.dart';
 import '../models/intimacy_model.dart';
+import '../models/moment_model.dart';
 import '../services/supabase_service.dart';
 
 class DataProvider extends ChangeNotifier {
@@ -65,6 +66,7 @@ class DataProvider extends ChangeNotifier {
       fetchOrders(),
       fetchIntimacy(),
       fetchIntimacyBalance(),
+      fetchMoments(),
     ]);
     _setLoading(false);
   }
@@ -172,6 +174,46 @@ class DataProvider extends ChangeNotifier {
     debugPrint('DataProvider: Intimacy updated successfully');
   }
   
+  // Moments Logic
+  List<Moment> _moments = [];
+  List<Moment> get moments => _moments;
+
+  Future<void> fetchMoments() async {
+    if (_currentCoupleId == null) return;
+    try {
+      final data = await _supabaseService.getMoments(_currentCoupleId!);
+      _moments = data.map((e) => Moment.fromMap(e)).toList();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('DataProvider: Error fetching moments: $e');
+    }
+  }
+
+  Future<void> publishMoment(String content, dynamic imageFile) async {
+     if (_currentUserId == null || _currentCoupleId == null) return;
+     
+     String? imageUrl;
+     if (imageFile != null) {
+       imageUrl = await _supabaseService.uploadMomentImage(_currentUserId!, imageFile);
+     }
+
+     final momentData = {
+       'couple_id': _currentCoupleId,
+       'user_id': _currentUserId,
+       'content': content,
+       'image_url': imageUrl,
+     };
+
+     await _supabaseService.createMoment(momentData);
+     await fetchMoments();
+  }
+
+  Future<void> toggleMomentLike(String momentId) async {
+    if (_currentUserId == null) return;
+    await _supabaseService.momentToggleLike(momentId, _currentUserId!);
+    await fetchMoments(); // Refresh to get valid count
+  }
+
   int _calculateLevel(int score) {
     return (score / 100).floor() + 1;
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:lottie/lottie.dart';
 import 'package:nn_oder/l10n/generated/app_localizations.dart';
 import '../../core/constants.dart';
 import '../../models/order_model.dart';
@@ -121,18 +122,46 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with SingleTick
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: AppColors.primary,
-          unselectedLabelColor: Colors.grey,
-          indicatorColor: AppColors.primary,
-          indicatorWeight: 3,
-          indicatorSize: TabBarIndicatorSize.label,
-          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          tabs: [
-            Tab(text: 'Today'), // Use l10n in real app if available, hardcoded for now based on request
-            Tab(text: 'All Orders'),
-          ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: TabBar(
+              controller: _tabController,
+              indicator: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                color: AppColors.primary,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.grey[600],
+              indicatorSize: TabBarIndicatorSize.tab,
+              dividerColor: Colors.transparent,
+              labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              tabs: [
+                Tab(text: 'Today'),
+                Tab(text: 'All Orders'),
+              ],
+            ),
+          ),
         ),
       ),
       body: TabBarView(
@@ -148,20 +177,23 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with SingleTick
   Widget _buildTimelineList(BuildContext context, List<Order> orders, {required bool isToday}) {
     if (orders.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Transform.translate(
+          offset: const Offset(0, -50),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.history_toggle_off, size: 80, color: Colors.grey[300])
-                .animate()
-                .scale(duration: 600.ms, curve: Curves.elasticOut),
-            const SizedBox(height: 16),
-            Text(
-              'No orders yet',
-              style: TextStyle(fontSize: 18, color: Colors.grey[500]),
-            ).animate().fadeIn(delay: 300.ms),
+            SizedBox(
+              width: 300,
+              height: 300,
+              child: Lottie.asset(
+                'assets/lottie/empty.json',
+                fit: BoxFit.contain,
+              ),
+            ),
           ],
         ),
-      );
+      ),
+    );
     }
 
     // Grouping
